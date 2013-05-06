@@ -1,5 +1,5 @@
 <?php
-namespace Icecave\Sked;
+namespace Icecave\Sked\Schedule;
 
 interface ScheduleInterface
 {

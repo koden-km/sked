@@ -1,0 +1,51 @@
+#!/usr/bin/env php
+<?php
+$packageRoot = dirname(__DIR__);
+
+$matches = array();
+if (preg_match('{^(.*)/vendor/.+/.+$}', $packageRoot, $matches)) {
+    require $matches[1] . '/vendor/autoload.php';
+} else {
+    require $packageRoot . '/vendor/autoload.php';
+}
+
+// Icecave\Archer\Support\Asplode::instance()->install();
+
+// $application = new Icecave\Archer\Console\Application($packageRoot);
+// $application->run();
+
+$schedule = new Icecave\Sked\Schedule\Schedule(
+    '10101',
+    'skew.test',
+    'This is muh payload!'
+);
+
+$provider = new Icecave\Sked\Provider\BasicProvider(
+    $schedule,
+    new Icecave\Chrono\Duration\Duration(30)
+);
+
+$dispatcher = new Icecave\Sked\Dispatcher\Dispatcher;
+
+$logger = new Monolog\Logger(
+    'sked',
+    [new Monolog\Handler\StreamHandler('php://stdout')]
+);
+
+$scheduler = new Icecave\Sked\Scheduler(
+    $provider,
+    $dispatcher,
+    $logger
+);
+
+$scheduler->run();
+
+/*
+        ProviderInterface $provider,
+        DispatcherInterface $dispatcher,
+        LoggerInterface $logger,
+        Duration $reloadInterval = null,
+        Duration $delayWarningThreshold = null,
+        ClockInterface $clock = null,
+        Isolator $isolator = null
+*/

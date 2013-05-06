@@ -1,9 +1,10 @@
 <?php
-namespace Icecave\Sked;
+namespace Icecave\Sked\Provider;
 
 use Icecave\Chrono\DateTime;
+use Icecave\Sked\Schedule\Event;
 
-interface ScheduleProviderInterface
+interface ProviderInterface
 {
     /**
      * Acquire the next schedule due to be executed.
@@ -15,20 +16,20 @@ interface ScheduleProviderInterface
      * @param DateTime $now       The current time.
      * @param DateTime $threshold The threshold after which schedules will not be considered for execution.
      *
-     * @return ScheduleEvent|null The schedule event describing the next execution, or null if there is none.
+     * @return Event|null The schedule event describing the next execution, or null if there is none.
      */
-    public function acquire(DateTime $now, DateTime $threshold = null);
+    public function acquire(DateTime $now, DateTime $threshold);
 
     /**
      * Release a previously acquired schedule event.
      *
-     * If $queuedAt is non-null the schedule is marked as executed and will not be returned from
+     * If $dispatchedAt is non-null the schedule is marked as executed and will not be returned from
      * acquire() until the NEXT scheduled execution.
      *
-     * @param ScheduleEvent $event    The schedule event that was processed.
-     * @param DateTime|null $queuedAt The time at which the job was queued for execution, or null if it was not queued.
+     * @param Event         $event        The schedule event that was processed.
+     * @param DateTime|null $dispatchedAt The time at which the job was dispatched for execution, or null if it was not dispatched.
      */
-    public function release(ScheduleEvent $event, DateTime $queuedAt = null);
+    public function release(Event $event, DateTime $dispatchedAt = null);
 
     /**
      * Reload the schedules.
