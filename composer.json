@@ -1,0 +1,34 @@
+{
+    "name": "icecave/sked",
+    "description": "A job scheduler for Skew.",
+    "keywords": ["job", "schedule", "cron", "task"],
+    "homepage": "https://github.com/IcecaveStudios/skew",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "James Harris",
+            "email": "james.harris@icecave.com.au"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.3",
+        "icecave/chrono": "~0.1"
+    },
+    "require-dev": {
+        "eloquent/typhoon": "~0.9",
+        "icecave/archer": "~0.3"
+    },
+    "autoload": {
+        "psr-0": {
+            "Icecave\\Sked": "lib",
+            "Icecave\\Sked\\TypeCheck": "lib-typhoon"
+        }
+    },
+    "extra": {
+        "typhoon": {
+            "output-path": "lib-typhoon",
+            "validator-namespace": "Icecave\\Sked\\TypeCheck",
+            "use-native-callable": false
+        }
+    }
+}
