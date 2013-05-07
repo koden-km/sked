@@ -1,23 +1,31 @@
 <?php
 namespace Icecave\Sked\Schedule;
 
+/**
+ * A schedule defines the execution interval(s) and task information used to produce jobs.
+ */
 class Schedule implements ScheduleInterface
 {
-    public function __construct($id, $taskName, $payload)
+    /**
+     * @param string        $name     A unique name for the schedule.
+     * @param string        $taskName The name of the Skew task to execute.
+     * @param mixed         $payload  The payload data to send with the job.
+     * @param array<string> $tags     Tags for the job request.
+     */
+    public function __construct($name, $taskName, $payload)
     {
-        $this->id = $id;
+        $this->name = $name;
         $this->taskName = $taskName;
         $this->payload = $payload;
-        $this->enabled = true;
         $this->skippable = false;
     }
 
     /**
-     * @return string A unique identifier for the schedule.
+     * @return string A unique name for the schedule.
      */
-    public function id()
+    public function name()
     {
-        return $this->id;
+        return $this->name;
     }
 
     /**
@@ -37,27 +45,7 @@ class Schedule implements ScheduleInterface
     }
 
     /**
-     * Indicates whether or not the schedule is enabled.
-     *
-     * @return boolean True if the schedule is enabled.
-     */
-    public function isEnabled()
-    {
-        return $this->enabled;
-    }
-
-    /**
-     * Controls whether or not the schedule is enabled.
-     *
-     * @param boolean $enabled True if the schedule is enabled.
-     */
-    public function setIsEnabled($enabled)
-    {
-        $this->enabled = $enabled;
-    }
-
-    /**
-     * Indicates whether or not missed executions may be skipped when recovering from a down-time.
+     * Indicates whether or not missed executions may be skipped.
      *
      * @return boolean True if executions may be skipped.
      */
@@ -67,7 +55,7 @@ class Schedule implements ScheduleInterface
     }
 
     /**
-     * Controls whether or not missed executions may be skipped when recovering from a down-time.
+     * Controls whether or not missed executions may be skipped.
      *
      * @param boolean $skippable True if executions may be skipped.
      */
@@ -76,9 +64,8 @@ class Schedule implements ScheduleInterface
         $this->skippable = $skippable;
     }
 
-    private $id;
+    private $name;
     private $taskName;
     private $payload;
-    private $enabled;
     private $skippable;
 }

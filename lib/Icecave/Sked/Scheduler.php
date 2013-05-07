@@ -37,7 +37,7 @@ class Scheduler implements LoggerAwareInterface
         Isolator $isolator = null
     ) {
         if (null === $reloadInterval) {
-            $reloadInterval = new Duration(300);
+            $reloadInterval = new Duration(600);
         }
 
         if (null === $delayWarningThreshold) {
@@ -64,7 +64,7 @@ class Scheduler implements LoggerAwareInterface
     public function run()
     {
         if ($this->isRunning) {
-            return;
+            return false;
         }
 
         try {
@@ -84,12 +84,16 @@ class Scheduler implements LoggerAwareInterface
 
             $this->logger->notice('Exited cleanly.');
 
+            return true;
+
         // Log unexpected exceptions ...
         } catch (Exception $e) {
             $this->logger->critical(
                 'Terminating due to unexpected exception: ' . $e->getMessage(),
                 ['exception' => $e]
             );
+
+            return false;
         }
     }
 
@@ -99,6 +103,7 @@ class Scheduler implements LoggerAwareInterface
 
         $handler = function ($signal) use ($self) {
             switch ($signal) {
+                case SIGINT:
                 case SIGTERM:
                     $self->isRunning = false;
                     break;
@@ -112,6 +117,7 @@ class Scheduler implements LoggerAwareInterface
         $this->doReload = true;
         $this->nextEvent = null;
         $this->isolator->pcntl_signal(SIGTERM, $handler);
+        $this->isolator->pcntl_signal(SIGINT, $handler);
         $this->isolator->pcntl_signal(SIGHUP, $handler);
     }
 
@@ -120,21 +126,9 @@ class Scheduler implements LoggerAwareInterface
         $this->isRunning = false;
         $this->doReload = false;
         $this->isolator->pcntl_signal(SIGTERM, SIG_DFL);
+        $this->isolator->pcntl_signal(SIGINT, SIG_DFL);
         $this->isolator->pcntl_signal(SIGHUP, SIG_DFL);
-
-        if ($this->nextEvent) {
-            $this->provider->release($this->nextEvent);
-            $this->logger->debug(
-                sprintf(
-                    'Released undispatched "%s" task from schedule "%s" due at %s.',
-                    $this->nextEvent->schedule()->taskName(),
-                    $this->nextEvent->schedule()->id(),
-                    $this->nextEvent->dateTime()
-                ),
-                ['payload' => $this->nextEvent->schedule()->payload()]
-            );
-            $this->nextEvent = null;
-        }
+        $this->releaseEvent();
     }
 
     private function mainLoop()
@@ -143,53 +137,34 @@ class Scheduler implements LoggerAwareInterface
 
             $this->isolator->pcntl_signal_dispatch();
 
-            // Handle reload due to signal ...
             if ($this->doReload) {
+                $this->releaseEvent();
                 $this->reload();
                 $this->doReload = false;
             }
 
-            // Calculate time of next reload ...
-            $nextReload = $this->lastReload->add($this->reloadInterval);
+            if ($event = $this->acquireEvent()) {
 
-            // Look for an event before the next reload, if we don't already have one ...
-            if (null === $this->nextEvent) {
-                $this->nextEvent = $this->provider->acquire(
-                    $this->clock->localDateTime(),
-                    $nextReload
-                );
-
-                if (null !== $this->nextEvent) {
-                    $this->logger->debug(
-                        sprintf(
-                            'Acquired "%s" task from schedule "%s" due at %s.',
-                            $this->nextEvent->schedule()->taskName(),
-                            $this->nextEvent->schedule()->id(),
-                            $this->nextEvent->dateTime()
-                        ),
-                        ['payload' => $this->nextEvent->schedule()->payload()]
-                    );
+                if ($this->waitUntil($event->dateTime())) {
+                    $this->dispatchEvent($event);
                 }
-            }
 
-            // If we *still* don't have an event, wait until the next reload ...
-            if (null === $this->nextEvent) {
-                if ($this->waitUntil($nextReload)) {
+            } else {
+
+                if ($this->waitUntil($this->nextReloadDateTime())) {
                     $this->doReload = true;
                 }
 
-            // Otherwise wait for the event time before dispatching ...
-            } elseif ($this->waitUntil($this->nextEvent->dateTime())) {
-                $this->dispatch($this->nextEvent);
-                $this->nextEvent = null;
             }
         }
     }
 
     private function reload()
     {
+        $now = $this->clock->localDateTime();
+
         try {
-            $count = $this->provider->reload();
+            $count = $this->provider->reload($now);
             $this->logger->notice(
                 sprintf(
                     'Loaded %d schedule(s), next reload in %ds.',
@@ -204,64 +179,118 @@ class Scheduler implements LoggerAwareInterface
             );
         }
 
-        $this->lastReload = $this->clock->localDateTime();
+        $this->lastReload = $now;
     }
 
-    private function dispatch(Event $event)
+    private function nextReloadDateTime()
+    {
+        if (null === $this->lastReload) {
+            return $this->clock->localDateTime();
+        }
+
+        return $this->lastReload->add($this->reloadInterval);
+    }
+
+    private function acquireEvent()
+    {
+        if (null === $this->nextEvent) {
+            $this->nextEvent = $this->provider->acquire(
+                $this->clock->localDateTime(),
+                $this->nextReloadDateTime()
+            );
+
+            if (null !== $this->nextEvent) {
+                $this->logger->debug(
+                    sprintf(
+                        'Acquired "%s" event due at %s.',
+                        $this->nextEvent->schedule()->name(),
+                        $this->nextEvent->dateTime()
+                    ),
+                    [
+                        'task' => $this->nextEvent->schedule()->taskName(),
+                        'payload' => $this->nextEvent->schedule()->payload(),
+                    ]
+                );
+            }
+        }
+
+        return $this->nextEvent;
+    }
+
+    private function dispatchEvent()
     {
         $now = $this->clock->localDateTime();
 
-        $jobId = $this->dispatcher->dispatch($now, $event);
+        $jobId = $this->dispatcher->dispatch($now, $this->nextEvent);
 
         $this->logger->info(
             sprintf(
-                'Job "%s" dispatched: "%s" task from schedule "%s".',
+                'Dispatched "%s" job (id:%s, task:%s)',
+                $this->nextEvent->schedule()->name(),
                 $jobId,
-                $event->schedule()->taskName(),
-                $event->schedule()->id()
+                $this->nextEvent->schedule()->taskName()
             )
         );
 
-        $this->provider->release($event, $now);
-
-        $this->logger->debug(
-            sprintf(
-                'Released dispatched "%s" task from schedule "%s" due at %s',
-                $this->nextEvent->schedule()->taskName(),
-                $this->nextEvent->schedule()->id(),
-                $this->nextEvent->dateTime()
-            ),
-            ['payload' => $this->nextEvent->schedule()->payload()]
-        );
-
-        $delay = $now->differenceAsDuration($event->dateTime());
+        $delay = $now->differenceAsDuration($this->nextEvent->dateTime());
 
         if ($delay->compare($this->delayWarningThreshold) >= 0) {
             $this->logger->warning(
                 sprintf(
                     'Dispatch of job "%s" scheduled at %s was delayed by %ds.',
                     $jobId,
-                    $event->dateTime(),
+                    $this->nextEvent->dateTime(),
                     $delay->totalSeconds()
                 )
             );
+        }
+
+        $this->releaseEvent($now);
+    }
+
+    private function releaseEvent(DateTime $dispatchedAt = null)
+    {
+        if ($this->nextEvent) {
+
+            $this->provider->release(
+                $this->clock->localDateTime(),
+                $this->nextEvent,
+                $dispatchedAt
+            );
+
+            if ($dispatchedAt) {
+                $message = 'Released "%s" event due at %s.';
+            } else {
+                $message = 'Released "%s" event due at %s without dispatching.';
+            }
+
+            $this->logger->debug(
+                sprintf(
+                    $message,
+                    $this->nextEvent->schedule()->name(),
+                    $this->nextEvent->dateTime()
+                ),
+                [
+                    'task' => $this->nextEvent->schedule()->taskName(),
+                    'payload' => $this->nextEvent->schedule()->payload(),
+                ]
+            );
+
+            $this->nextEvent = null;
         }
     }
 
     private function waitUntil(DateTime $dateTime)
     {
-        $seconds = $dateTime->differenceAsDuration($this->clock->localDateTime())->totalSeconds();
+        $seconds = $dateTime->differenceAsDuration(
+            $this->clock->localDateTime()
+        )->totalSeconds();
 
         if ($seconds <= 0) {
             return true;
         }
 
-        $this->logger->debug(
-            sprintf(
-                'Sleeping %ds.',
-                $seconds
-            )
-        );
+        $this->logger->debug(sprintf('Sleeping %ds.', $seconds));
 
         if (0 !== $this->isolator->sleep($seconds)) {
             $this->isolator->pcntl_signal_dispatch();

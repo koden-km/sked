@@ -29,8 +29,6 @@ class AggregateProvider implements ProviderInterface
      *
      * Once a schedule has been acquired, subsequent calls to acquire() will not yield the same schedule.
      *
-     * If $threshold is non-null, acquire() will not yield any schedule that is next due after $threshold.
-     *
      * @param DateTime $now       The current time.
      * @param DateTime $threshold The threshold after which schedules will not be considered for execution.
      *
@@ -52,7 +50,7 @@ class AggregateProvider implements ProviderInterface
             }
         }
 
-        $this->providerMap[$nextEvent] = $provider;
+        $this->eventMap[$nextEvent] = $provider;
 
         return $nextEvent;
     }
@@ -63,26 +61,29 @@ class AggregateProvider implements ProviderInterface
      * If $dispatchedAt is non-null the schedule is marked as executed and will not be returned from
      * acquire() until the NEXT scheduled execution.
      *
+     * @param DateTime      $now          The current time.
      * @param Event         $event        The schedule event that was processed.
      * @param DateTime|null $dispatchedAt The time at which the job was dispatched for execution, or null if it was not dispatched.
      */
-    public function release(Event $event, DateTime $dispatchedAt = null)
+    public function release(DateTime $now, Event $event, DateTime $dispatchedAt = null)
     {
-        $this->eventMap[$event]->release($event, $dispatchedAt);
+        $this->eventMap[$event]->release($now, $event, $dispatchedAt);
         $this->eventMap->remove($event);
     }
 
     /**
      * Reload the schedules.
      *
+     * @param DateTime $now The current time.
+     *
      * @return integer The number of active schedules.
      */
-    public function reload()
+    public function reload(DateTime $now)
     {
         $count = 0;
 
         foreach ($this->providers as $provider) {
-            $count += $provider->reload();
+            $count += $provider->reload($now);
         }
 
         return $count;

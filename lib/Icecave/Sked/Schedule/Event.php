@@ -5,23 +5,30 @@ use Icecave\Chrono\DateTime;
 use Icecave\Sked\Schedule\ScheduleInterface;
 
 /**
- * Represents a specific execution of a schedule.
+ * An event represents a specific time at which a job is to be dispatched based on a schedule.
  */
 class Event
 {
+    /**
+     * @param ScheduleInterface $schedule The schedule describing the job.
+     * @param DateTime          $dateTime The time at which the event is expected to execute.
+     */
     public function __construct(ScheduleInterface $schedule, DateTime $dateTime)
     {
         $this->schedule = $schedule;
         $this->dateTime = $dateTime;
     }
 
+    /**
+     * @return ScheduleInterface The schedule describing the job.
+     */
     public function schedule()
     {
         return $this->schedule;
     }
 
     /**
-     * @return DateTime The time at which the schedule event is expected to execute.
+     * @return DateTime The time at which the event is expected to execute.
      */
     public function dateTime()
     {

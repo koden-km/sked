@@ -15,7 +15,7 @@ if (preg_match('{^(.*)/vendor/.+/.+$}', $packageRoot, $matches)) {
 // $application->run();
 
 $schedule = new Icecave\Sked\Schedule\Schedule(
-    '10101',
+    'awesome-sauce',
     'skew.test',
     'This is muh payload!'
 );
