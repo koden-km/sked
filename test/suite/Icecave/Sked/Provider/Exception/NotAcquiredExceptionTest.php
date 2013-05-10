@@ -10,7 +10,7 @@ class NotAcquiredExceptionTest extends PHPUnit_Framework_TestCase
     {
         $exception = new NotAcquiredException('foo');
 
-        $this->assertSame('The schedule "foo" was not acquired.', $exception->getMessage());
+        $this->assertSame('The schedule "foo" has not previously been acquired.', $exception->getMessage());
         $this->assertSame(0, $exception->getCode());
         $this->assertNull($exception->getPrevious());
     }
@@ -20,7 +20,7 @@ class NotAcquiredExceptionTest extends PHPUnit_Framework_TestCase
         $previousException = new Exception;
         $exception = new NotAcquiredException('foo', $previousException);
 
-        $this->assertSame('The schedule "foo" was not acquired.', $exception->getMessage());
+        $this->assertSame('The schedule "foo" has not previously been acquired.', $exception->getMessage());
         $this->assertSame(0, $exception->getCode());
         $this->assertSame($previousException, $exception->getPrevious());
     }

@@ -12,6 +12,6 @@ class NotAcquiredException extends LogicException
      */
     public function __construct($scheduleName, Exception $exception = null)
     {
-        parent::__construct('The schedule "' . $scheduleName . '" was not acquired.', 0, $exception);
+        parent::__construct('The schedule "' . $scheduleName . '" has not previously been acquired.', 0, $exception);
     }
 }

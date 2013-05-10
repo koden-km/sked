@@ -14,14 +14,28 @@ class AggregateProvider implements ProviderInterface
         $this->eventMap = new Map;
     }
 
+    /**
+     * @param ProviderInterface $provider
+     */
     public function add(ProviderInterface $provider)
     {
         $this->providers->add($provider);
     }
 
+    /**
+     * @param ProviderInterface $provider
+     */
     public function remove(ProviderInterface $provider)
     {
         $this->providers->remove($provider);
+    }
+
+    /**
+     * @return Set<ProviderInterface>
+     */
+    public function providers()
+    {
+        return $this->providers;
     }
 
     /**
@@ -51,7 +65,7 @@ class AggregateProvider implements ProviderInterface
             }
         }
 
-        $this->eventMap[$nextEvent] = $provider;
+        $this->eventMap[$nextEvent] = $nextProvider;
 
         return $nextEvent;
     }
@@ -68,7 +82,7 @@ class AggregateProvider implements ProviderInterface
             $provider->rollback($now, $event);
             $this->eventMap->remove($event);
         } else {
-            throw new Exception\NotAcquiredException($event->schedule->name(), $e);
+            throw new Exception\NotAcquiredException($event->schedule()->name());
         }
     }
 
@@ -87,7 +101,7 @@ class AggregateProvider implements ProviderInterface
             $provider->commit($now, $event, $lowerBound);
             $this->eventMap->remove($event);
         } else {
-            throw new Exception\NotAcquiredException($event->schedule->name(), $e);
+            throw new Exception\NotAcquiredException($event->schedule()->name());
         }
     }
 

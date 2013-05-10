@@ -2,8 +2,8 @@
 namespace Icecave\Sked\Schedule;
 
 use Icecave\Chrono\DateTime;
-use PHPUnit_Framework_TestCase;
 use Phake;
+use PHPUnit_Framework_TestCase;
 
 class EventTest extends PHPUnit_Framework_TestCase
 {
