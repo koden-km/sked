@@ -3,8 +3,59 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "cf9b90e560069dc6d223bdfe7bde88a2",
+    "hash": "0d8022a04f1cc7dab04dd7fdd563c671",
     "packages": [
+        {
+            "name": "eloquent/asplode",
+            "version": "1.0.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/eloquent/asplode.git",
+                "reference": "1.0.5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/eloquent/asplode/zipball/1.0.5",
+                "reference": "1.0.5",
+                "shasum": ""
+            },
+            "require": {
+                "icecave/isolator": ">=2.0,<3.0",
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "icecave/archer": ">=0.2,<1.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Eloquent\\Asplode": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Erin Millard",
+                    "email": "ezzatron@gmail.com",
+                    "homepage": "http://ezzatron.com/"
+                }
+            ],
+            "description": "Drop-in exception-based error handling for PHP.",
+            "homepage": "https://github.com/eloquent/asplode",
+            "keywords": [
+                "error",
+                "errorexception",
+                "exception",
+                "failure",
+                "fault",
+                "handler",
+                "handling"
+            ],
+            "time": "2013-03-04 08:07:03"
+        },
         {
             "name": "eloquent/enumeration",
             "version": "3.0.2",
@@ -54,16 +105,16 @@
         },
         {
             "name": "icecave/chrono",
-            "version": "0.1.0",
+            "version": "0.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/IcecaveStudios/chrono.git",
-                "reference": "0.1.0"
+                "reference": "0.1.1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/IcecaveStudios/chrono/zipball/0.1.0",
-                "reference": "0.1.0",
+                "url": "https://api.github.com/repos/IcecaveStudios/chrono/zipball/0.1.1",
+                "reference": "0.1.1",
                 "shasum": ""
             },
             "require": {
@@ -108,7 +159,7 @@
                 "time",
                 "timer"
             ],
-            "time": "2013-05-06 08:05:42"
+            "time": "2013-05-10 06:18:05"
         },
         {
             "name": "icecave/collections",
@@ -170,6 +221,54 @@
                 "stack"
             ],
             "time": "2013-02-26 04:19:11"
+        },
+        {
+            "name": "icecave/isolator",
+            "version": "2.1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/IcecaveStudios/isolator.git",
+                "reference": "2.1.2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/IcecaveStudios/isolator/zipball/2.1.2",
+                "reference": "2.1.2",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3"
+            },
+            "require-dev": {
+                "icecave/archer": ">=0.3,<1.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Icecave\\Isolator": "lib"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "James Harris",
+                    "email": "james.harris@icecave.com.au"
+                }
+            ],
+            "description": "Isolate PHP tests from the global environment.",
+            "homepage": "https://github.com/IcecaveStudios/isolator",
+            "keywords": [
+                "fake",
+                "mock",
+                "phake",
+                "phpunit",
+                "test",
+                "unit"
+            ],
+            "time": "2013-04-05 04:37:02"
         },
         {
             "name": "icecave/repr",
@@ -369,57 +468,6 @@
         }
     ],
     "packages-dev": [
-        {
-            "name": "eloquent/asplode",
-            "version": "1.0.5",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/eloquent/asplode.git",
-                "reference": "1.0.5"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/eloquent/asplode/zipball/1.0.5",
-                "reference": "1.0.5",
-                "shasum": ""
-            },
-            "require": {
-                "icecave/isolator": ">=2.0,<3.0",
-                "php": ">=5.3.0"
-            },
-            "require-dev": {
-                "icecave/archer": ">=0.2,<1.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-0": {
-                    "Eloquent\\Asplode": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Erin Millard",
-                    "email": "ezzatron@gmail.com",
-                    "homepage": "http://ezzatron.com/"
-                }
-            ],
-            "description": "Drop-in exception-based error handling for PHP.",
-            "homepage": "https://github.com/eloquent/asplode",
-            "keywords": [
-                "error",
-                "errorexception",
-                "exception",
-                "failure",
-                "fault",
-                "handler",
-                "handling"
-            ],
-            "time": "2013-03-04 08:07:03"
-        },
         {
             "name": "eloquent/blox",
             "version": "1.2.0",
@@ -845,54 +893,6 @@
                 "unit"
             ],
             "time": "2013-04-30 07:52:53"
-        },
-        {
-            "name": "icecave/isolator",
-            "version": "2.1.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/IcecaveStudios/isolator.git",
-                "reference": "2.1.2"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/IcecaveStudios/isolator/zipball/2.1.2",
-                "reference": "2.1.2",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.3.3"
-            },
-            "require-dev": {
-                "icecave/archer": ">=0.3,<1.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-0": {
-                    "Icecave\\Isolator": "lib"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "James Harris",
-                    "email": "james.harris@icecave.com.au"
-                }
-            ],
-            "description": "Isolate PHP tests from the global environment.",
-            "homepage": "https://github.com/IcecaveStudios/isolator",
-            "keywords": [
-                "fake",
-                "mock",
-                "phake",
-                "phpunit",
-                "test",
-                "unit"
-            ],
-            "time": "2013-04-05 04:37:02"
         },
         {
             "name": "icecave/pasta-ast",

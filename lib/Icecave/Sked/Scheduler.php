@@ -128,7 +128,7 @@ class Scheduler implements LoggerAwareInterface
         $this->isolator->pcntl_signal(SIGTERM, SIG_DFL);
         $this->isolator->pcntl_signal(SIGINT, SIG_DFL);
         $this->isolator->pcntl_signal(SIGHUP, SIG_DFL);
-        $this->releaseEvent();
+        $this->rollbackEvent();
     }
 
     private function mainLoop()
@@ -138,7 +138,7 @@ class Scheduler implements LoggerAwareInterface
             $this->isolator->pcntl_signal_dispatch();
 
             if ($this->doReload) {
-                $this->releaseEvent();
+                $this->rollbackEvent();
                 $this->reload();
                 $this->doReload = false;
             }
@@ -202,14 +202,11 @@ class Scheduler implements LoggerAwareInterface
             if (null !== $this->nextEvent) {
                 $this->logger->debug(
                     sprintf(
-                        'Acquired "%s" event due at %s.',
+                        'Acquire event <%s from %s @ %s>',
+                        $this->nextEvent->taskDetails()->task(),
                         $this->nextEvent->schedule()->name(),
                         $this->nextEvent->dateTime()
-                    ),
-                    [
-                        'task' => $this->nextEvent->schedule()->taskName(),
-                        'payload' => $this->nextEvent->schedule()->payload(),
-                    ]
+                    )
                 );
             }
         }
@@ -225,55 +222,75 @@ class Scheduler implements LoggerAwareInterface
 
         $this->logger->info(
             sprintf(
-                'Dispatched "%s" job (id:%s, task:%s)',
+                'Dispatched "%s" job (id: %s, task: %s)',
                 $this->nextEvent->schedule()->name(),
                 $jobId,
-                $this->nextEvent->schedule()->taskName()
+                $this->nextEvent->taskDetails()->task()
             )
         );
 
-        $delay = $now->differenceAsDuration($this->nextEvent->dateTime());
+        if ($this->nextEvent->schedule()->isSkippable()) {
+            $lowerBounds = $now;
+        } else {
+            $delay = $now->differenceAsDuration($this->nextEvent->dateTime());
 
-        if ($delay->compare($this->delayWarningThreshold) >= 0) {
-            $this->logger->warning(
-                sprintf(
-                    'Dispatch of job "%s" scheduled at %s was delayed by %ds.',
-                    $jobId,
-                    $this->nextEvent->dateTime(),
-                    $delay->totalSeconds()
-                )
-            );
+            if ($delay->compare($this->delayWarningThreshold) >= 0) {
+                $this->logger->warning(
+                    sprintf(
+                        'Dispatch of job "%s" scheduled at %s was delayed by %ds.',
+                        $jobId,
+                        $this->nextEvent->dateTime(),
+                        $delay->totalSeconds()
+                    )
+                );
+            }
+
+            $lowerBounds = $this->nextEvent->dateTime();
         }
 
-        $this->releaseEvent($now);
+        $this->commitEvent($lowerBounds);
     }
 
-    private function releaseEvent(DateTime $dispatchedAt = null)
+    private function rollbackEvent()
     {
         if ($this->nextEvent) {
 
-            $this->provider->release(
+            $this->provider->rollback(
                 $this->clock->localDateTime(),
-                $this->nextEvent,
-                $dispatchedAt
+                $this->nextEvent
             );
-
-            if ($dispatchedAt) {
-                $message = 'Released "%s" event due at %s.';
-            } else {
-                $message = 'Released "%s" event due at %s without dispatching.';
-            }
 
             $this->logger->debug(
                 sprintf(
-                    $message,
+                    'Rollback event <%s from %s @ %s>',
+                    $this->nextEvent->taskDetails()->task(),
                     $this->nextEvent->schedule()->name(),
                     $this->nextEvent->dateTime()
-                ),
-                [
-                    'task' => $this->nextEvent->schedule()->taskName(),
-                    'payload' => $this->nextEvent->schedule()->payload(),
-                ]
+                )
+            );
+
+            $this->nextEvent = null;
+        }
+    }
+
+    private function commitEvent(DateTime $lowerBounds)
+    {
+        if ($this->nextEvent) {
+
+            $this->provider->commit(
+                $this->clock->localDateTime(),
+                $this->nextEvent,
+                $lowerBounds
+            );
+
+            $this->logger->debug(
+                sprintf(
+                    'Commit event <%s from %s @ %s> with lower bounds %s',
+                    $this->nextEvent->taskDetails()->task(),
+                    $this->nextEvent->schedule()->name(),
+                    $this->nextEvent->dateTime(),
+                    $lowerBounds
+                )
             );
 
             $this->nextEvent = null;

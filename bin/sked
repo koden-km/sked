@@ -9,20 +9,27 @@ if (preg_match('{^(.*)/vendor/.+/.+$}', $packageRoot, $matches)) {
     require $packageRoot . '/vendor/autoload.php';
 }
 
-// Icecave\Archer\Support\Asplode::instance()->install();
+Icecave\Archer\Support\Asplode::instance()->install();
 
 // $application = new Icecave\Archer\Console\Application($packageRoot);
 // $application->run();
 
-$schedule = new Icecave\Sked\Schedule\Schedule(
-    'awesome-sauce',
-    'skew.test',
-    'This is muh payload!'
+$provider = new Icecave\Sked\Provider\AggregateProvider;
+
+$provider->add(
+    new Icecave\Sked\Provider\BasicProvider(
+        new Icecave\Sked\Schedule\Schedule('schedule-1'),
+        new Icecave\Skew\Entities\TaskDetails('skew.test.task1'),
+        new Icecave\Chrono\Duration\Duration(10)
+    )
 );
 
-$provider = new Icecave\Sked\Provider\BasicProvider(
-    $schedule,
-    new Icecave\Chrono\Duration\Duration(30)
+$provider->add(
+    new Icecave\Sked\Provider\BasicProvider(
+        new Icecave\Sked\Schedule\Schedule('schedule-2'),
+        new Icecave\Skew\Entities\TaskDetails('skew.test.task2'),
+        new Icecave\Chrono\Duration\Duration(27)
+    )
 );
 
 $dispatcher = new Icecave\Sked\Dispatcher\Dispatcher;
@@ -39,13 +46,3 @@ $scheduler = new Icecave\Sked\Scheduler(
 );
 
 $scheduler->run();
-
-/*
-        ProviderInterface $provider,
-        DispatcherInterface $dispatcher,
-        LoggerInterface $logger,
-        Duration $reloadInterval = null,
-        Duration $delayWarningThreshold = null,
-        ClockInterface $clock = null,
-        Isolator $isolator = null
-*/
