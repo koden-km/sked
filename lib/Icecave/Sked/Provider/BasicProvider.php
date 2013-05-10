@@ -76,8 +76,11 @@ class BasicProvider implements ProviderInterface
             throw new Exception\NotAcquiredException($event->schedule()->name());
         }
 
-        while ($lowerBound->compare($this->next) < 0) {
-            $this->next = $this->next->add($this->interval);
+        // Advance the next timestamp if it's out of bounds ...
+        if ($this->next->compare($lowerBound) <= 0) {
+            $difference = $lowerBound->differenceAsDuration($this->next)->totalSeconds() + 1;
+            $iterations = intval(ceil($difference / $this->interval->totalSeconds()));
+            $this->next = $this->next->add(new Duration($iterations * $this->interval->totalSeconds()));
         }
 
         $this->acquiredEvent = null;
