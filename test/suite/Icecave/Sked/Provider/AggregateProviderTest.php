@@ -22,6 +22,12 @@ class AggregateProviderTest extends PHPUnit_Framework_TestCase
         $this->provider1 = Phake::mock(__NAMESPACE__ . '\ProviderInterface');
         $this->provider2 = Phake::mock(__NAMESPACE__ . '\ProviderInterface');
 
+        $this->event1 = new Event($this->schedule1, $this->taskDetails, new DateTime(2012, 1, 1));
+        $this->event2 = new Event($this->schedule2, $this->taskDetails, new DateTime(2012, 1, 1));
+
+        $this->upperBound = new DateTime(2013, 1, 1);
+        $this->lowerBound = new DateTime(2011, 1, 1);
+
         $this->provider = new AggregateProvider;
 
         $this->provider->add($this->provider1);
@@ -46,96 +52,75 @@ class AggregateProviderTest extends PHPUnit_Framework_TestCase
 
     public function testAcquire()
     {
-        $upperBound = new DateTime(2012, 1, 1);
+        $result = $this->provider->acquire($this->now, $this->upperBound);
 
-        $result = $this->provider->acquire($this->now, $upperBound);
-
-        Phake::verify($this->provider1)->acquire($this->now, $upperBound);
-        Phake::verify($this->provider2)->acquire($this->now, $upperBound);
+        Phake::verify($this->provider1)->acquire($this->now, $this->upperBound);
+        Phake::verify($this->provider2)->acquire($this->now, $this->upperBound);
 
         $this->assertNull($result);
     }
 
     public function testAcquireOneEvent()
     {
-        $upperBound = new DateTime(2012, 1, 1);
-
-        $event = new Event($this->schedule1, $this->taskDetails, new DateTime(2012, 1, 1));
-
         Phake::when($this->provider1)
             ->acquire(Phake::anyParameters())
-            ->thenReturn($event);
+            ->thenReturn($this->event1);
 
-        $result = $this->provider->acquire($this->now, $upperBound);
+        $result = $this->provider->acquire($this->now, $this->upperBound);
 
-        Phake::verify($this->provider1)->acquire($this->now, $upperBound);
-        Phake::verify($this->provider2)->acquire($this->now, $upperBound);
+        Phake::verify($this->provider1)->acquire($this->now, $this->upperBound);
+        Phake::verify($this->provider2)->acquire($this->now, $this->event1->dateTime());
 
-        $this->assertSame($event, $result);
+        $this->assertSame($this->event1, $result);
     }
 
     public function testAcquireTwoEvents()
     {
-        $upperBound = new DateTime(2013, 1, 1);
-
-        $event1 = new Event($this->schedule1, $this->taskDetails, new DateTime(2012, 1, 1));
-        $event2 = new Event($this->schedule2, $this->taskDetails, new DateTime(2012, 1, 1));
-
         Phake::when($this->provider1)
             ->acquire(Phake::anyParameters())
-            ->thenReturn($event1);
+            ->thenReturn($this->event1);
 
         Phake::when($this->provider2)
             ->acquire(Phake::anyParameters())
-            ->thenReturn($event2);
+            ->thenReturn($this->event2);
 
-        $result = $this->provider->acquire($this->now, $upperBound);
+        $result = $this->provider->acquire($this->now, $this->upperBound);
 
         Phake::inOrder(
-            Phake::verify($this->provider1)->acquire($this->now, $upperBound),
-            Phake::verify($this->provider2)->acquire($this->now, $event1->dateTime()),
-            Phake::verify($this->provider1)->rollback($this->now, $event1)
+            Phake::verify($this->provider1)->acquire($this->now, $this->upperBound),
+            Phake::verify($this->provider2)->acquire($this->now, $this->event1->dateTime()),
+            Phake::verify($this->provider1)->rollback($this->now, $this->event1)
         );
 
-        $this->assertSame($event2, $result);
+        $this->assertSame($this->event2, $result);
     }
 
     public function testRollback()
     {
-        $upperBound = new DateTime(2013, 1, 1);
-
-        $event = new Event($this->schedule1, $this->taskDetails, new DateTime(2012, 1, 1));
-
         Phake::when($this->provider1)
             ->acquire(Phake::anyParameters())
-            ->thenReturn($event);
+            ->thenReturn($this->event1);
 
-        $result = $this->provider->acquire($this->now, $upperBound);
+        $result = $this->provider->acquire($this->now, $this->upperBound);
         $this->provider->rollback($this->now, $result);
 
-        Phake::verify($this->provider1)->rollback($this->now, $event);
+        Phake::verify($this->provider1)->rollback($this->now, $this->event1);
         Phake::verify($this->provider2, Phake::never())->rollback(Phake::anyParameters());
     }
 
     public function testRollbackFailure()
     {
-        $event = new Event($this->schedule1, $this->taskDetails, new DateTime(2012, 1, 1));
-
         $this->setExpectedException(__NAMESPACE__ . '\Exception\NotAcquiredException', 'The schedule "schedule-1" has not previously been acquired.');
-        $this->provider->rollback($this->now, $event);
+        $this->provider->rollback($this->now, $this->event1);
     }
 
     public function testRollbackFailureAfterSuccess()
     {
-        $upperBound = new DateTime(2013, 1, 1);
-
-        $event = new Event($this->schedule1, $this->taskDetails, new DateTime(2012, 1, 1));
-
         Phake::when($this->provider1)
             ->acquire(Phake::anyParameters())
-            ->thenReturn($event);
+            ->thenReturn($this->event1);
 
-        $result = $this->provider->acquire($this->now, $upperBound);
+        $result = $this->provider->acquire($this->now, $this->upperBound);
         $this->provider->rollback($this->now, $result);
 
         $this->setExpectedException(__NAMESPACE__ . '\Exception\NotAcquiredException', 'The schedule "schedule-1" has not previously been acquired.');
@@ -144,48 +129,34 @@ class AggregateProviderTest extends PHPUnit_Framework_TestCase
 
     public function testCommit()
     {
-        $upperBound = new DateTime(2013, 1, 1);
-        $lowerBound = new DateTime(2011, 1, 1);
-
-        $event = new Event($this->schedule1, $this->taskDetails, new DateTime(2012, 1, 1));
-
         Phake::when($this->provider1)
             ->acquire(Phake::anyParameters())
-            ->thenReturn($event);
+            ->thenReturn($this->event1);
 
-        $result = $this->provider->acquire($this->now, $upperBound);
-        $this->provider->commit($this->now, $result, $lowerBound);
+        $result = $this->provider->acquire($this->now, $this->upperBound);
+        $this->provider->commit($this->now, $result, $this->lowerBound);
 
-        Phake::verify($this->provider1)->commit($this->now, $event, $lowerBound);
+        Phake::verify($this->provider1)->commit($this->now, $this->event1, $this->lowerBound);
         Phake::verify($this->provider2, Phake::never())->commit(Phake::anyParameters());
     }
 
     public function testCommitFailure()
     {
-        $lowerBound = new DateTime(2011, 1, 1);
-
-        $event = new Event($this->schedule1, $this->taskDetails, new DateTime(2012, 1, 1));
-
         $this->setExpectedException(__NAMESPACE__ . '\Exception\NotAcquiredException', 'The schedule "schedule-1" has not previously been acquired.');
-        $this->provider->commit($this->now, $event, $lowerBound);
+        $this->provider->commit($this->now, $this->event1, $this->lowerBound);
     }
 
     public function testCommitFailureAfterSuccess()
     {
-        $upperBound = new DateTime(2013, 1, 1);
-        $lowerBound = new DateTime(2011, 1, 1);
-
-        $event = new Event($this->schedule1, $this->taskDetails, new DateTime(2012, 1, 1));
-
         Phake::when($this->provider1)
             ->acquire(Phake::anyParameters())
-            ->thenReturn($event);
+            ->thenReturn($this->event1);
 
-        $result = $this->provider->acquire($this->now, $upperBound);
-        $this->provider->commit($this->now, $result, $lowerBound);
+        $result = $this->provider->acquire($this->now, $this->upperBound);
+        $this->provider->commit($this->now, $result, $this->lowerBound);
 
         $this->setExpectedException(__NAMESPACE__ . '\Exception\NotAcquiredException', 'The schedule "schedule-1" has not previously been acquired.');
-        $this->provider->commit($this->now, $result, $lowerBound);
+        $this->provider->commit($this->now, $result, $this->lowerBound);
     }
 
     public function testReload()
