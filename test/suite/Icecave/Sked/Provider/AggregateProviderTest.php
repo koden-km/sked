@@ -13,6 +13,8 @@ class AggregateProviderTest extends PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->now = new DateTime(2012, 1, 1);
+        $this->upperBound = new DateTime(2013, 1, 1);
+        $this->lowerBound = new DateTime(2011, 1, 1);
 
         $this->schedule1 = new Schedule('schedule-1');
         $this->schedule2 = new Schedule('schedule-2');
@@ -24,9 +26,6 @@ class AggregateProviderTest extends PHPUnit_Framework_TestCase
 
         $this->event1 = new Event($this->schedule1, $this->taskDetails, new DateTime(2012, 1, 1));
         $this->event2 = new Event($this->schedule2, $this->taskDetails, new DateTime(2012, 1, 1));
-
-        $this->upperBound = new DateTime(2013, 1, 1);
-        $this->lowerBound = new DateTime(2011, 1, 1);
 
         $this->provider = new AggregateProvider;
 

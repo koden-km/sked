@@ -3,15 +3,16 @@ namespace Icecave\Sked\Provider;
 
 use Icecave\Chrono\DateTime;
 use Icecave\Chrono\Duration\Duration;
-use Icecave\Sked\Schedule\ScheduleInterface;
 use Icecave\Sked\Schedule\Event;
+use Icecave\Sked\Schedule\ScheduleInterface;
+use Icecave\Skew\Entities\TaskDetailsInterface;
 
 class BasicProvider implements ProviderInterface
 {
-    public function  __construct(ScheduleInterface $schedule, JobRequestMessage $jobRequest, Duration $interval)
+    public function  __construct(ScheduleInterface $schedule, TaskDetailsInterface $taskDetails, Duration $interval)
     {
         $this->schedule = $schedule;
-        $this->jobRequest = $jobRequest;
+        $this->taskDetails = $taskDetails;
         $this->interval = $interval;
     }
 
@@ -38,9 +39,11 @@ class BasicProvider implements ProviderInterface
             return null;
         }
 
-        $this->acquiredEvent = new Event($this->schedule, $this->next, $this->jobRequest);
-
-        return $this->acquiredEvent;
+        return $this->acquiredEvent = new Event(
+            $this->schedule,
+            $this->taskDetails,
+            $this->next
+        );
     }
 
     /**
