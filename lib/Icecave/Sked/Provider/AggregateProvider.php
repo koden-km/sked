@@ -25,28 +25,29 @@ class AggregateProvider implements ProviderInterface
     }
 
     /**
-     * Acquire the next schedule due to be executed.
+     * Acquire the first event due before the given upper bound.
      *
-     * Once a schedule has been acquired, subsequent calls to acquire() will not yield the same schedule.
+     * Once an event has been acquired, subsequent calls to acquire() will not yield any event for the same schedule.
+     * Until the event has been released using either {@see ProviderInterface::rollback()} or {@see ProviderInterface::commit()}.
      *
-     * @param DateTime $now       The current time.
-     * @param DateTime $threshold The threshold after which schedules will not be considered for execution.
+     * @param DateTime $now        The current time.
+     * @param DateTime $upperBound Threshold of event eligibility (event-date < upper-bound).
      *
-     * @return Event|null The schedule event describing the next execution, or null if there is none.
+     * @return Event|null The event describing the next execution, or null if there is none.
      */
-    public function acquire(DateTime $now, DateTime $threshold)
+    public function acquire(DateTime $now, DateTime $upperBound)
     {
         $nextEvent = null;
         $nextProvider = null;
 
         foreach ($this->providers as $provider) {
-            if ($event = $provider->acquire($now, $threshold)) {
+            if ($event = $provider->acquire($now, $upperBound)) {
                 if ($nextEvent) {
-                    $nextProvider->release($nextEvent);
+                    $nextProvider->rollback($now, $nextEvent);
                 }
                 $nextEvent = $event;
                 $nextProvider = $provider;
-                $threshold = $event->nextExecutionTime();
+                $upperBound = $event->dateTime();
             }
         }
 
@@ -56,19 +57,38 @@ class AggregateProvider implements ProviderInterface
     }
 
     /**
-     * Release a previously acquired schedule event.
+     * Release a previously acquired event, without dispatching a job or making any changes.
      *
-     * If $dispatchedAt is non-null the schedule is marked as executed and will not be returned from
-     * acquire() until the NEXT scheduled execution.
-     *
-     * @param DateTime      $now          The current time.
-     * @param Event         $event        The schedule event that was processed.
-     * @param DateTime|null $dispatchedAt The time at which the job was dispatched for execution, or null if it was not dispatched.
+     * @param DateTime $now   The current time.
+     * @param Event    $event The previously acquired event.
      */
-    public function release(DateTime $now, Event $event, DateTime $dispatchedAt = null)
+    public function rollback(DateTime $now, Event $event)
     {
-        $this->eventMap[$event]->release($now, $event, $dispatchedAt);
-        $this->eventMap->remove($event);
+        if ($this->eventMap->tryGet($event, $provider)) {
+            $provider->rollback($now, $event);
+            $this->eventMap->remove($event);
+        } else {
+            throw new Exception\NotAcquiredException($event->schedule->name(), $e);
+        }
+    }
+
+    /**
+     * Release a previously acquired event and mark the job as dispatched.
+     *
+     * Future events for the same schedule are guaranteed to have an execution time greater than the specified lower bound.
+     *
+     * @param DateTime $now        The current time.
+     * @param Event    $event      The previously acquired event.
+     * @param DateTime $lowerBound Threshold of future event eligibility (event-date > upper-bound).
+     */
+    public function commit(DateTime $now, Event $event, DateTime $lowerBound)
+    {
+        if ($this->eventMap->tryGet($event, $provider)) {
+            $provider->commit($now, $event, $lowerBound);
+            $this->eventMap->remove($event);
+        } else {
+            throw new Exception\NotAcquiredException($event->schedule->name(), $e);
+        }
     }
 
     /**

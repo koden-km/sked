@@ -1,23 +1,16 @@
 <?php
 namespace Icecave\Sked\Schedule;
 
-/**
- * A schedule defines the execution interval(s) and task information used to produce jobs.
- */
 class Schedule implements ScheduleInterface
 {
     /**
-     * @param string        $name     A unique name for the schedule.
-     * @param string        $taskName The name of the Skew task to execute.
-     * @param mixed         $payload  The payload data to send with the job.
-     * @param array<string> $tags     Tags for the job request.
+     * @param string  $name      A unique name for the schedule.
+     * @param boolean $skippable Indicates whether or not missed executions may be skipped.
      */
-    public function __construct($name, $taskName, $payload)
+    public function __construct($name, $skippable = true)
     {
         $this->name = $name;
-        $this->taskName = $taskName;
-        $this->payload = $payload;
-        $this->skippable = false;
+        $this->skippable = $skippable;
     }
 
     /**
@@ -26,22 +19,6 @@ class Schedule implements ScheduleInterface
     public function name()
     {
         return $this->name;
-    }
-
-    /**
-     * @return string The name of the task to be executed.
-     */
-    public function taskName()
-    {
-        return $this->taskName;
-    }
-
-    /**
-     * @return mixed The job payload.
-     */
-    public function payload()
-    {
-        return $this->payload;
     }
 
     /**
@@ -65,7 +42,5 @@ class Schedule implements ScheduleInterface
     }
 
     private $name;
-    private $taskName;
-    private $payload;
     private $skippable;
 }

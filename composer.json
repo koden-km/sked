@@ -13,6 +13,7 @@
     "require": {
         "php": ">=5.4",
         "ext-pcntl": "*",
+        "icecave/skew-entities": "dev-develop@dev",
         "icecave/chrono": "~0.1",
         "icecave/collections": "~0.6",
         "monolog/monolog": "~1",
