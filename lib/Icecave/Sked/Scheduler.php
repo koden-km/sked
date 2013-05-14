@@ -5,7 +5,6 @@ use Exception;
 use Icecave\Chrono\Clock\ClockInterface;
 use Icecave\Chrono\Clock\SystemClock;
 use Icecave\Chrono\DateTime;
-use Icecave\Chrono\Duration\Duration;
 use Icecave\Isolator\Isolator;
 use Icecave\Sked\Dispatcher\DispatcherInterface;
 use Icecave\Sked\Provider\ProviderInterface;
@@ -19,31 +18,19 @@ class Scheduler implements LoggerAwareInterface
     use LoggerAwareTrait;
 
     /**
-     * @param ProviderInterface   $provider              The schedule provider from which schedules are acquired.
-     * @param DispatcherInterface $dispatcher            The dispatcher used to dispatch jobs.
-     * @param LoggerInterface     $logger                Target for scheduling log information.
-     * @param Duration|null       $reloadInterval        The time span to wait between schedule reloads.
-     * @param Duration|null       $delayWarningThreshold The maximum time span a job can be delayed before raising a warning.
-     * @param ClockInterface|null $clock                 The clock to use, or null to use the system clock.
+     * @param ProviderInterface   $provider   The schedule provider from which schedules are acquired.
+     * @param DispatcherInterface $dispatcher The dispatcher used to dispatch jobs.
+     * @param LoggerInterface     $logger     Target for scheduling log information.
+     * @param ClockInterface|null $clock      The clock to use, or null to use the system clock.
      * @param Isolator|null       $isolator
      */
     public function __construct(
         ProviderInterface $provider,
         DispatcherInterface $dispatcher,
         LoggerInterface $logger,
-        Duration $reloadInterval = null,
-        Duration $delayWarningThreshold = null,
         ClockInterface $clock = null,
         Isolator $isolator = null
     ) {
-        if (null === $reloadInterval) {
-            $reloadInterval = new Duration(600);
-        }
-
-        if (null === $delayWarningThreshold) {
-            $delayWarningThreshold = new Duration(30);
-        }
-
         if (null === $clock) {
             $clock = new SystemClock;
         }
@@ -53,20 +40,48 @@ class Scheduler implements LoggerAwareInterface
         $this->isRunning = false;
         $this->lastReload = DateTime::fromUnixTime(0);
         $this->doReload = false;
-        $this->reloadInterval = $reloadInterval;
-        $this->delayWarningThreshold = $delayWarningThreshold;
+        $this->reloadInterval = 600;
+        $this->delayWarningThreshold = 30;
         $this->clock = $clock;
         $this->isolator = Isolator::get($isolator);
 
         $this->setLogger($logger);
     }
 
+    /**
+     * @return integer
+     */
+    public function reloadInterval()
+    {
+        return $this->reloadInterval;
+    }
+
+    /**
+     * @param integer $seconds
+     */
+    public function setReloadInterval($seconds)
+    {
+        $this->reloadInterval = $seconds;
+    }
+
+    /**
+     * @return integer
+     */
+    public function delayWarningThreshold()
+    {
+        return $this->delayWarningThreshold;
+    }
+
+    /**
+     * @param integer $seconds
+     */
+    public function setDelayWarningThreshold($seconds)
+    {
+        $this->delayWarningThreshold = $seconds;
+    }
+
     public function run()
     {
-        if ($this->isRunning) {
-            return false;
-        }
-
         try {
             // Prepare for execution ...
             $this->setUp();
@@ -97,7 +112,7 @@ class Scheduler implements LoggerAwareInterface
         }
     }
 
-    private function setUp()
+    protected function setUp()
     {
         $self = $this;
 
@@ -121,7 +136,7 @@ class Scheduler implements LoggerAwareInterface
         $this->isolator->pcntl_signal(SIGHUP, $handler);
     }
 
-    private function tearDown()
+    protected function tearDown()
     {
         $this->isRunning = false;
         $this->doReload = false;
@@ -131,7 +146,7 @@ class Scheduler implements LoggerAwareInterface
         $this->rollbackEvent();
     }
 
-    private function mainLoop()
+    protected function mainLoop()
     {
         while ($this->isRunning) {
 
@@ -159,7 +174,7 @@ class Scheduler implements LoggerAwareInterface
         }
     }
 
-    private function reload()
+    protected function reload()
     {
         $now = $this->clock->localDateTime();
 
@@ -169,7 +184,7 @@ class Scheduler implements LoggerAwareInterface
                 sprintf(
                     'Loaded %d schedule(s), next reload in %ds.',
                     $count,
-                    $this->reloadInterval->totalSeconds()
+                    $this->reloadInterval
                 )
             );
         } catch (Exception $e) {
@@ -182,16 +197,12 @@ class Scheduler implements LoggerAwareInterface
         $this->lastReload = $now;
     }
 
-    private function nextReloadDateTime()
+    protected function nextReloadDateTime()
     {
-        if (null === $this->lastReload) {
-            return $this->clock->localDateTime();
-        }
-
         return $this->lastReload->add($this->reloadInterval);
     }
 
-    private function acquireEvent()
+    protected function acquireEvent()
     {
         if (null === $this->nextEvent) {
             $this->nextEvent = $this->provider->acquire(
@@ -214,7 +225,7 @@ class Scheduler implements LoggerAwareInterface
         return $this->nextEvent;
     }
 
-    private function dispatchEvent()
+    protected function dispatchEvent()
     {
         $now = $this->clock->localDateTime();
 
@@ -232,26 +243,26 @@ class Scheduler implements LoggerAwareInterface
         if ($this->nextEvent->schedule()->isSkippable()) {
             $lowerBounds = $now;
         } else {
-            $delay = $now->differenceAsDuration($this->nextEvent->dateTime());
+            $lowerBounds = $this->nextEvent->dateTime();
 
-            if ($delay->compare($this->delayWarningThreshold) >= 0) {
+            $delay = $now->differenceAsSeconds($this->nextEvent->dateTime());
+
+            if ($delay >= $this->delayWarningThreshold) {
                 $this->logger->warning(
                     sprintf(
                         'Dispatch of job "%s" scheduled at %s was delayed by %ds.',
                         $jobId,
                         $this->nextEvent->dateTime(),
-                        $delay->totalSeconds()
+                        $delay
                     )
                 );
             }
-
-            $lowerBounds = $this->nextEvent->dateTime();
         }
 
         $this->commitEvent($lowerBounds);
     }
 
-    private function rollbackEvent()
+    protected function rollbackEvent()
     {
         if ($this->nextEvent) {
 
@@ -273,7 +284,7 @@ class Scheduler implements LoggerAwareInterface
         }
     }
 
-    private function commitEvent(DateTime $lowerBounds)
+    protected function commitEvent(DateTime $lowerBounds)
     {
         if ($this->nextEvent) {
 
@@ -297,25 +308,27 @@ class Scheduler implements LoggerAwareInterface
         }
     }
 
-    private function waitUntil(DateTime $dateTime)
+    protected function waitUntil(DateTime $dateTime)
     {
-        $seconds = $dateTime->differenceAsDuration(
+        $seconds = $dateTime->differenceAsSeconds(
             $this->clock->localDateTime()
-        )->totalSeconds();
+        );
 
         if ($seconds <= 0) {
             return true;
         }
 
-        $this->logger->debug(sprintf('Sleeping %ds.', $seconds));
+        $this->logger->debug(
+            sprintf('Sleeping %ds until %s', $seconds, $dateTime)
+        );
 
-        if (0 !== $this->isolator->sleep($seconds)) {
-            $this->isolator->pcntl_signal_dispatch();
-
-            return false;
-        } else {
-            return $this->clock->localDateTime()->compare($dateTime) >= 0;
+        if (0 === $this->isolator->sleep($seconds)) {
+            return $this->clock->localDateTime()->isGreaterThanOrEqualTo($dateTime);
         }
+
+        $this->isolator->pcntl_signal_dispatch();
+
+        return false;
     }
 
     private $provider;

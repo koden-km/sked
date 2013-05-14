@@ -2,7 +2,7 @@
 namespace Icecave\Sked\Provider;
 
 use Icecave\Chrono\DateTime;
-use Icecave\Chrono\Duration\Duration;
+use Icecave\Chrono\TimeSpan\Duration;
 use Icecave\Sked\Schedule\Event;
 use Icecave\Sked\Schedule\Schedule;
 use Icecave\Skew\Entities\TaskDetails;

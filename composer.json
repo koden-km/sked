@@ -15,7 +15,7 @@
         "ext-pcntl": "*",
         "eloquent/asplode": "~1",
         "icecave/skew-entities": "dev-develop@dev",
-        "icecave/chrono": "~0.1",
+        "icecave/chrono": "~0.2",
         "icecave/collections": "~0.6",
         "monolog/monolog": "~1",
         "psr/log": "~1"

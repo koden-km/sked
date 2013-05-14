@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "0d8022a04f1cc7dab04dd7fdd563c671",
+    "hash": "8aa940245bee0a0755559af064d8ff20",
     "packages": [
         {
             "name": "eloquent/asplode",
@@ -105,16 +105,16 @@
         },
         {
             "name": "icecave/chrono",
-            "version": "0.1.1",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/IcecaveStudios/chrono.git",
-                "reference": "0.1.1"
+                "reference": "0.2.0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/IcecaveStudios/chrono/zipball/0.1.1",
-                "reference": "0.1.1",
+                "url": "https://api.github.com/repos/IcecaveStudios/chrono/zipball/0.2.0",
+                "reference": "0.2.0",
                 "shasum": ""
             },
             "require": {
@@ -159,7 +159,7 @@
                 "time",
                 "timer"
             ],
-            "time": "2013-05-10 06:18:05"
+            "time": "2013-05-13 23:38:20"
         },
         {
             "name": "icecave/collections",

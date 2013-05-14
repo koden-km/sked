@@ -2,7 +2,7 @@
 namespace Icecave\Sked\Provider;
 
 use Icecave\Chrono\DateTime;
-use Icecave\Chrono\Duration\Duration;
+use Icecave\Chrono\TimeSpan\Duration;
 use Icecave\Sked\Schedule\Event;
 use Icecave\Sked\Schedule\ScheduleInterface;
 use Icecave\Skew\Entities\TaskDetailsInterface;
@@ -35,7 +35,7 @@ class BasicProvider implements ProviderInterface
 
         if ($this->acquiredEvent) {
             return null;
-        } elseif ($this->next->compare($upperBound) >= 0) {
+        } elseif ($upperBound->isLessThanOrEqualTo($this->next)) {
             return null;
         }
 
@@ -77,8 +77,8 @@ class BasicProvider implements ProviderInterface
         }
 
         // Advance the next timestamp if it's out of bounds ...
-        if ($this->next->compare($lowerBound) <= 0) {
-            $difference = $lowerBound->differenceAsDuration($this->next)->totalSeconds() + 1;
+        if ($this->next->isLessThanOrEqualTo($lowerBound)) {
+            $difference = $lowerBound->differenceAsSeconds($this->next) + 1;
             $iterations = intval(ceil($difference / $this->interval->totalSeconds()));
             $this->next = $this->next->add(new Duration($iterations * $this->interval->totalSeconds()));
         }

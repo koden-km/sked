@@ -20,7 +20,7 @@ $provider->add(
     new Icecave\Sked\Provider\BasicProvider(
         new Icecave\Sked\Schedule\Schedule('schedule-1'),
         new Icecave\Skew\Entities\TaskDetails('skew.test.task1'),
-        new Icecave\Chrono\Duration\Duration(10)
+        new Icecave\Chrono\TimeSpan\Duration(10)
     )
 );
 
@@ -28,7 +28,7 @@ $provider->add(
     new Icecave\Sked\Provider\BasicProvider(
         new Icecave\Sked\Schedule\Schedule('schedule-2'),
         new Icecave\Skew\Entities\TaskDetails('skew.test.task2'),
-        new Icecave\Chrono\Duration\Duration(27)
+        new Icecave\Chrono\TimeSpan\Duration(27)
     )
 );
 
