@@ -1,0 +1,13 @@
+email-reports:
+    schedule: @hourly
+    task: site.send-email-reports
+    payload: 
+        - @sked.time
+ 
+leaderboards:
+    schedule: "*/5 * * * *"
+    skippable: true
+    task: site.update-leaderboards
+    tags:
+        - foo
+        - bar

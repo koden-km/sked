@@ -1,0 +1,39 @@
+{
+    "type": "object",
+    "additionalProperties": {
+        "type": "object",
+        "properties": {
+            "schedule": {
+                "description": "Cron format schedule time.",
+                "type": "string"
+            },
+            "task": {
+                "description": "The name of the task to run.",
+                "type": "string"
+            },
+            "payload": {
+                "description": "The payload data for the task.",
+                "default": null
+            },
+            "skippable": {
+                "description": "Is this task allowed to be skipped when behind schedule.",
+                "type": "boolean",
+                "default": false
+            },
+            "tags": {
+                "description": "Tags associated with the task.",
+                "type": "array",
+                "items": {
+                    "description": "Tag name.",
+                    "type": "string"
+                },
+                "default": []
+            }
+        },
+        "additionalProperties": false,
+        "required": [
+            "schedule",
+            "task"
+        ]
+    }
+}
