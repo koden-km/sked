@@ -3,6 +3,7 @@ namespace Icecave\Sked\Schedule;
 
 use Icecave\Chrono\DateTime;
 use Icecave\Sked\Schedule\ScheduleInterface;
+use Icecave\Sked\TypeCheck\TypeCheck;
 use Icecave\Skew\Entities\TaskDetailsInterface;
 
 /**
@@ -17,6 +18,8 @@ class Event
      */
     public function __construct(ScheduleInterface $schedule, TaskDetailsInterface $taskDetails, DateTime $dateTime)
     {
+        $this->typeCheck = TypeCheck::get(__CLASS__, func_get_args());
+
         $this->schedule = $schedule;
         $this->taskDetails = $taskDetails;
         $this->dateTime = $dateTime;
@@ -27,6 +30,8 @@ class Event
      */
     public function schedule()
     {
+        TypeCheck::get(__CLASS__)->schedule(func_get_args());
+
         return $this->schedule;
     }
 
@@ -35,6 +40,8 @@ class Event
      */
     public function taskDetails()
     {
+        TypeCheck::get(__CLASS__)->taskDetails(func_get_args());
+
         return $this->taskDetails;
     }
 
@@ -43,9 +50,12 @@ class Event
      */
     public function dateTime()
     {
+        TypeCheck::get(__CLASS__)->dateTime(func_get_args());
+
         return $this->dateTime;
     }
 
+    private $typeCheck;
     private $schedule;
     private $taskDetails;
     private $dateTime;

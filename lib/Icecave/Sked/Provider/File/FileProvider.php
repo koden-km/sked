@@ -15,10 +15,10 @@ class FileProvider implements ProviderInterface
     /**
      * @param mixed<string> $directories
      * @param FileReader    $fileReader
-     * @param string        $schedulePersistanceFilename
+     * @param string|null   $schedulePersistanceFilename
      * @param Isolator|null $isolator
      */
-    public function __construct($directories, FileReader $fileReader, $schedulePersistanceFilename, Isolator $isolator = null)
+    public function __construct($directories, FileReader $fileReader, $schedulePersistanceFilename = null, Isolator $isolator = null)
     {
         $this->typeCheck = TypeCheck::get(__CLASS__, func_get_args());
 
@@ -102,7 +102,7 @@ class FileProvider implements ProviderInterface
      *
      * @param DateTime $now        The current time.
      * @param Event    $event      The previously acquired event.
-     * @param DateTime $lowerBound Threshold of future event eligibility (event-date > upper-bound).
+     * @param DateTime $lowerBound Threshold of future event eligibility (event-date > lower-bound).
      */
     public function commit(DateTime $now, Event $event, DateTime $lowerBound)
     {
@@ -143,14 +143,16 @@ class FileProvider implements ProviderInterface
     {
         TypeCheck::get(__CLASS__)->loadScheduleLowerBounds(func_get_args());
 
-        // TODO: use the isolator
-
-        if (!is_file($this->schedulePersistanceFilename)) {
+        if (null === $this->schedulePersistanceFilename) {
             return;
         }
 
-        $result = file_get_contents($this->schedulePersistanceFilename);
-        if ($result !== false) {
+        if (!$this->isolator->is_file($this->schedulePersistanceFilename)) {
+            return;
+        }
+
+        $result = $this->isolator->file_get_contents($this->schedulePersistanceFilename);
+        if (false !== $result) {
             $this->scheduleLowerBound->unserialize($result);
         }
     }
@@ -159,10 +161,12 @@ class FileProvider implements ProviderInterface
     {
         TypeCheck::get(__CLASS__)->saveScheduleLowerBounds(func_get_args());
 
-        // TODO: use the isolator
+        if (null === $this->schedulePersistanceFilename) {
+            return;
+        }
 
-        $result = file_put_contents($this->schedulePersistanceFilename, $this->scheduleLowerBound->serialize());
-        if ($result === false) {
+        $result = $this->isolator->file_put_contents($this->schedulePersistanceFilename, $this->scheduleLowerBound->serialize());
+        if (false === $result) {
             // throw?
         }
     }

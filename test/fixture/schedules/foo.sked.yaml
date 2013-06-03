@@ -3,6 +3,8 @@ email-reports:
     task: site.send-email-reports
     payload: 
         - @sked.time
+    tags: []
+    skippable: false
  
 leaderboards:
     schedule: "*/5 * * * *"
@@ -11,3 +13,4 @@ leaderboards:
     tags:
         - foo
         - bar
+    payload: null

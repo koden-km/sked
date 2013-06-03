@@ -1,3 +1,6 @@
 sub-dir-test:
     schedule: "0 0 1 * *"
     task: site.do-something
+    tags: []
+    skippable: false
+    payload: null

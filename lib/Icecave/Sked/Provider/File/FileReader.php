@@ -14,7 +14,6 @@ use Icecave\Skew\Entities\TaskDetails;
 use Icecave\Sked\Provider\Exception\ReloadException;
 use Icecave\Sked\TypeCheck\TypeCheck;
 use Zend\Uri\File As FileUri;
-use LogicException;
 
 class FileReader
 {
@@ -64,17 +63,10 @@ class FileReader
 
         $schedules = new Map;
 
-// echo PHP_EOL . __METHOD__ . ' [directories=' . gettype($directories) . ']' . PHP_EOL;
-
         foreach ($directories as $dirname) {
-
-// echo '- [is_dir() dirname=' . $dirname . ']' . PHP_EOL;
-
             if (!$this->isolator->is_dir($dirname)) {
-                throw new LogicException('Not a directory: "' . $dirname . '".');
+                throw new ReloadException('Schedule directory is invalid.');
             }
-
-// echo '- [scandir() dirname=' . $dirname . ']' . PHP_EOL;
 
             foreach ($this->isolator->scandir($dirname) as $entry) {
                 if ('.' === $entry || '..' === $entry) {
@@ -82,24 +74,17 @@ class FileReader
                 }
 
                 $path = $dirname . '/' . $entry;
-
-// echo '- [is_dir() path=' . $path . ']' . PHP_EOL;
-
                 if ($this->isolator->is_dir($path)) {
-// echo '- [readDirectories() array path=' . $path . ']' . PHP_EOL;
-                    $schedules->combine(
+                    $schedules = $schedules->combine(
                         $this->readDirectories(array($path))
                     );
                 } else {
-// echo '- [readFile() path=' . $path . ']' . PHP_EOL;
-                    $schedules->combine(
+                    $schedules = $schedules->combine(
                         $this->readFile($path)
                     );
                 }
             }
         }
-
-// echo '- Done.' . PHP_EOL;
 
         return $schedules;
     }
@@ -115,7 +100,12 @@ class FileReader
 
         $value = $this->reader->readPath($filename);
 
+// TODO: $details doesnt contain defaults (i had to manually add the defaults to the yaml files).
+
         $result = $this->constraintValidator->validate($value);
+
+// $result = $this->constraintValidator->validator()->validateAndApplyDefaults($this->constraintValidator->constraint(), $value);
+
         if (!$result->isValid()) {
             throw new ReloadException('Schedule file is invalid.');
         }
@@ -123,15 +113,15 @@ class FileReader
         $schedules = new Map;
 
         foreach ($value as $scheduleName => $details) {
-            $taskDetails = new TaskDetails($details->task);
-            $taskDetails->setPayload($details->payload);
-            $taskDetails->setTags($details->tags);
+            $taskDetails = new TaskDetails($details->task->value());
+            $taskDetails->setPayload($details->payload->value());
+            $taskDetails->setTags($details->tags->value());
 
             $schedule = new FileSchedule(
                 $scheduleName,
                 $taskDetails,
-                CronExpression::factory($details->schedule),
-                $details->skippable
+                CronExpression::factory($details->schedule->value()),
+                $details->skippable->value()
             );
 
             $schedules->add($scheduleName, $schedule);

@@ -5,12 +5,20 @@ use Icecave\Chrono\DateTime;
 use Icecave\Chrono\TimeSpan\Duration;
 use Icecave\Sked\Schedule\Event;
 use Icecave\Sked\Schedule\ScheduleInterface;
+use Icecave\Sked\TypeCheck\TypeCheck;
 use Icecave\Skew\Entities\TaskDetailsInterface;
 
 class BasicProvider implements ProviderInterface
 {
+    /**
+     * @param ScheduleInterface    $schedule
+     * @param TaskDetailsInterface $taskDetails
+     * @param Duration             $interval
+     */
     public function  __construct(ScheduleInterface $schedule, TaskDetailsInterface $taskDetails, Duration $interval)
     {
+        $this->typeCheck = TypeCheck::get(__CLASS__, func_get_args());
+
         $this->schedule = $schedule;
         $this->taskDetails = $taskDetails;
         $this->interval = $interval;
@@ -29,6 +37,8 @@ class BasicProvider implements ProviderInterface
      */
     public function acquire(DateTime $now, DateTime $upperBound)
     {
+        TypeCheck::get(__CLASS__)->acquire(func_get_args());
+
         if (null === $this->next) {
             $this->next = $now;
         }
@@ -54,6 +64,8 @@ class BasicProvider implements ProviderInterface
      */
     public function rollback(DateTime $now, Event $event)
     {
+        TypeCheck::get(__CLASS__)->rollback(func_get_args());
+
         if ($event !== $this->acquiredEvent) {
             throw new Exception\NotAcquiredException($event->schedule()->name());
         }
@@ -68,10 +80,12 @@ class BasicProvider implements ProviderInterface
      *
      * @param DateTime $now        The current time.
      * @param Event    $event      The previously acquired event.
-     * @param DateTime $lowerBound Threshold of future event eligibility (event-date > upper-bound).
+     * @param DateTime $lowerBound Threshold of future event eligibility (event-date > lower-bound).
      */
     public function commit(DateTime $now, Event $event, DateTime $lowerBound)
     {
+        TypeCheck::get(__CLASS__)->commit(func_get_args());
+
         if ($event !== $this->acquiredEvent) {
             throw new Exception\NotAcquiredException($event->schedule()->name());
         }
@@ -95,9 +109,12 @@ class BasicProvider implements ProviderInterface
      */
     public function reload(DateTime $now)
     {
+        TypeCheck::get(__CLASS__)->reload(func_get_args());
+
         return 1;
     }
 
+    private $typeCheck;
     private $schedule;
     private $jobRequest;
     private $interval;

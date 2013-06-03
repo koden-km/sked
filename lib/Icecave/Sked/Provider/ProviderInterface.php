@@ -34,7 +34,7 @@ interface ProviderInterface
      *
      * @param DateTime $now        The current time.
      * @param Event    $event      The previously acquired event.
-     * @param DateTime $lowerBound Threshold of future event eligibility (event-date > upper-bound).
+     * @param DateTime $lowerBound Threshold of future event eligibility (event-date > lower-bound).
      */
     public function commit(DateTime $now, Event $event, DateTime $lowerBound);
 
