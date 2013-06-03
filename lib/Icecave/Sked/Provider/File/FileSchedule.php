@@ -3,7 +3,6 @@ namespace Icecave\Sked\Provider\File;
 
 use Cron\CronExpression;
 use Icecave\Sked\Schedule\Schedule;
-use Icecave\Sked\Schedule\ScheduleInterface;
 use Icecave\Sked\TypeCheck\TypeCheck;
 use Icecave\Skew\Entities\TaskDetails;
 use Icecave\Skew\Entities\TaskDetailsInterface;
@@ -11,10 +10,10 @@ use Icecave\Skew\Entities\TaskDetailsInterface;
 class FileSchedule extends Schedule
 {
     /**
-     * @param string $name
+     * @param string               $name
      * @param TaskDetailsInterface $taskDetails
-     * @param CronExpression $cronExpression
-     * @param boolean $skippable
+     * @param CronExpression       $cronExpression
+     * @param boolean              $skippable
      */
     public function __construct($name, TaskDetailsInterface $taskDetails, CronExpression $cronExpression, $skippable)
     {

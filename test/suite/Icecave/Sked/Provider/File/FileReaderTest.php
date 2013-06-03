@@ -4,10 +4,9 @@ namespace Icecave\Sked\Provider\File;
 use Cron\CronExpression;
 use Eloquent\Liberator\Liberator;
 use Eloquent\Schemer\Constraint\Reader\SchemaReader;
-use Eloquent\Schemer\Constraint\Reader\SchemaReaderInterface;
-use Eloquent\Schemer\Reader\ReaderInterface;
 use Eloquent\Schemer\Reader\SwitchingScopeResolvingReader;
 use Eloquent\Schemer\Validation\BoundConstraintValidator;
+use Eloquent\Schemer\Validation\ConstraintValidator;
 use Eloquent\Schemer\Validation\DefaultingConstraintValidator;
 use Icecave\Collections\Map;
 use Icecave\Isolator\Isolator;
@@ -70,7 +69,7 @@ class FileReaderTest extends PHPUnit_Framework_TestCase
             'email-reports',
             $taskDetails1,
             CronExpression::factory('@hourly'),
-            false            
+            false
         );
 
         $taskDetails2 = new TaskDetails('site.update-leaderboards');
@@ -119,5 +118,25 @@ class FileReaderTest extends PHPUnit_Framework_TestCase
 
         $this->setExpectedException('Icecave\Sked\Provider\Exception\ReloadException', 'Schedule file is invalid.');
         $this->fileReader->readFile($filename);
+    }
+
+    public function testReadFileWithNonDefaultingConstraintValidatorInterface()
+    {
+        $constraintValidator = new BoundConstraintValidator(
+            new ConstraintValidator,
+            $this->schemaReader->readPath(__DIR__ . '/../../../../../../res/schedule-config.schema.json')
+        );
+
+        $fileReader = new FileReader(
+            $this->reader,
+            $constraintValidator,
+            $this->schemaReader,
+            $this->isolator
+        );
+
+        $filename = __DIR__ . '/../../../../../fixture/schedules/foo.sked.yaml';
+
+        $this->setExpectedException('Icecave\Sked\Provider\Exception\ReloadException', 'Schedule file is invalid.');
+        $fileReader->readFile($filename);
     }
 }

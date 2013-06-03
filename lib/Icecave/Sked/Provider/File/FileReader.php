@@ -8,6 +8,7 @@ use Eloquent\Schemer\Reader\ReaderInterface;
 use Eloquent\Schemer\Reader\SwitchingScopeResolvingReader;
 use Eloquent\Schemer\Validation\BoundConstraintValidator;
 use Eloquent\Schemer\Validation\DefaultingConstraintValidator;
+use Eloquent\Schemer\Validation\DefaultingConstraintValidatorInterface;
 use Icecave\Collections\Map;
 use Icecave\Isolator\Isolator;
 use Icecave\Skew\Entities\TaskDetails;
@@ -18,10 +19,10 @@ use Zend\Uri\File As FileUri;
 class FileReader
 {
     /**
-     * @param ReaderInterface|null $reader
+     * @param ReaderInterface|null          $reader
      * @param BoundConstraintValidator|null $constraintValidator
-     * @param SchemaReaderInterface|null $schemaReader
-     * @param Isolator|null $isolator
+     * @param SchemaReaderInterface|null    $schemaReader
+     * @param Isolator|null                 $isolator
      */
     public function __construct(
         ReaderInterface $reader = null,
@@ -100,11 +101,14 @@ class FileReader
 
         $value = $this->reader->readPath($filename);
 
-// TODO: $details doesnt contain defaults (i had to manually add the defaults to the yaml files).
-
-        $result = $this->constraintValidator->validate($value);
-
-// $result = $this->constraintValidator->validator()->validateAndApplyDefaults($this->constraintValidator->constraint(), $value);
+        if ($this->constraintValidator->validator() instanceof DefaultingConstraintValidatorInterface) {
+            $result = $this->constraintValidator->validator()->validateAndApplyDefaults(
+                $this->constraintValidator->constraint(),
+                $value
+            );
+        } else {
+            $result = $this->constraintValidator->validate($value);
+        }
 
         if (!$result->isValid()) {
             throw new ReloadException('Schedule file is invalid.');
@@ -112,19 +116,23 @@ class FileReader
 
         $schedules = new Map;
 
-        foreach ($value as $scheduleName => $details) {
-            $taskDetails = new TaskDetails($details->task->value());
-            $taskDetails->setPayload($details->payload->value());
-            $taskDetails->setTags($details->tags->value());
+        try {
+            foreach ($value as $scheduleName => $details) {
+                $taskDetails = new TaskDetails($details->task->value());
+                $taskDetails->setPayload($details->payload->value());
+                $taskDetails->setTags($details->tags->value());
 
-            $schedule = new FileSchedule(
-                $scheduleName,
-                $taskDetails,
-                CronExpression::factory($details->schedule->value()),
-                $details->skippable->value()
-            );
+                $schedule = new FileSchedule(
+                    $scheduleName,
+                    $taskDetails,
+                    CronExpression::factory($details->schedule->value()),
+                    $details->skippable->value()
+                );
 
-            $schedules->add($scheduleName, $schedule);
+                $schedules->add($scheduleName, $schedule);
+            }
+        } catch (\Eloquent\Schemer\Value\Exception\UndefinedPropertyException $e) {
+            throw new ReloadException('Schedule file is invalid.');
         }
 
         return $schedules;
