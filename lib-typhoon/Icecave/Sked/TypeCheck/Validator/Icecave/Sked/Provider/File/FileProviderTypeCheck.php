@@ -6,11 +6,8 @@ class FileProviderTypeCheck extends \Icecave\Sked\TypeCheck\AbstractValidator
     public function validateConstruct(array $arguments)
     {
         $argumentCount = \count($arguments);
-        if ($argumentCount < 2) {
-            if ($argumentCount < 1) {
-                throw new \Icecave\Sked\TypeCheck\Exception\MissingArgumentException('directories', 0, 'mixed<string>');
-            }
-            throw new \Icecave\Sked\TypeCheck\Exception\MissingArgumentException('fileReader', 1, 'Icecave\\Sked\\Provider\\File\\FileReader');
+        if ($argumentCount < 1) {
+            throw new \Icecave\Sked\TypeCheck\Exception\MissingArgumentException('directories', 0, 'mixed<string>');
         } elseif ($argumentCount > 4) {
             throw new \Icecave\Sked\TypeCheck\Exception\UnexpectedArgumentException(4, $arguments[4]);
         }
@@ -38,7 +35,7 @@ class FileProviderTypeCheck extends \Icecave\Sked\TypeCheck\AbstractValidator
             $value = $arguments[2];
             if (!(\is_string($value) || $value === null)) {
                 throw new \Icecave\Sked\TypeCheck\Exception\UnexpectedArgumentValueException(
-                    'schedulePersistanceFilename',
+                    'scheduleLowerBoundsFilename',
                     2,
                     $arguments[2],
                     'string|null'
@@ -99,17 +96,16 @@ class FileProviderTypeCheck extends \Icecave\Sked\TypeCheck\AbstractValidator
         }
     }
 
-    public function loadScheduleLowerBounds(array $arguments)
+    public function nextRunDateTime(array $arguments)
     {
-        if (\count($arguments) > 0) {
-            throw new \Icecave\Sked\TypeCheck\Exception\UnexpectedArgumentException(0, $arguments[0]);
-        }
-    }
-
-    public function saveScheduleLowerBounds(array $arguments)
-    {
-        if (\count($arguments) > 0) {
-            throw new \Icecave\Sked\TypeCheck\Exception\UnexpectedArgumentException(0, $arguments[0]);
+        $argumentCount = \count($arguments);
+        if ($argumentCount < 2) {
+            if ($argumentCount < 1) {
+                throw new \Icecave\Sked\TypeCheck\Exception\MissingArgumentException('now', 0, 'Icecave\\Chrono\\DateTime');
+            }
+            throw new \Icecave\Sked\TypeCheck\Exception\MissingArgumentException('schedule', 1, 'Icecave\\Sked\\Provider\\File\\FileSchedule');
+        } elseif ($argumentCount > 2) {
+            throw new \Icecave\Sked\TypeCheck\Exception\UnexpectedArgumentException(2, $arguments[2]);
         }
     }
 
@@ -136,16 +132,17 @@ class FileProviderTypeCheck extends \Icecave\Sked\TypeCheck\AbstractValidator
         }
     }
 
-    public function nextRunDateTime(array $arguments)
+    public function loadScheduleLowerBounds(array $arguments)
     {
-        $argumentCount = \count($arguments);
-        if ($argumentCount < 2) {
-            if ($argumentCount < 1) {
-                throw new \Icecave\Sked\TypeCheck\Exception\MissingArgumentException('now', 0, 'Icecave\\Chrono\\DateTime');
-            }
-            throw new \Icecave\Sked\TypeCheck\Exception\MissingArgumentException('schedule', 1, 'Icecave\\Sked\\Provider\\File\\FileSchedule');
-        } elseif ($argumentCount > 2) {
-            throw new \Icecave\Sked\TypeCheck\Exception\UnexpectedArgumentException(2, $arguments[2]);
+        if (\count($arguments) > 0) {
+            throw new \Icecave\Sked\TypeCheck\Exception\UnexpectedArgumentException(0, $arguments[0]);
+        }
+    }
+
+    public function saveScheduleLowerBounds(array $arguments)
+    {
+        if (\count($arguments) > 0) {
+            throw new \Icecave\Sked\TypeCheck\Exception\UnexpectedArgumentException(0, $arguments[0]);
         }
     }
 

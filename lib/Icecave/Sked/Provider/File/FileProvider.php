@@ -13,12 +13,12 @@ use Icecave\Sked\TypeCheck\TypeCheck;
 class FileProvider implements ProviderInterface
 {
     /**
-     * @param mixed<string> $directories
-     * @param FileReader    $fileReader
-     * @param string|null   $schedulePersistanceFilename
-     * @param Isolator|null $isolator
+     * @param mixed<string>   $directories
+     * @param FileReader|null $fileReader
+     * @param string|null     $scheduleLowerBoundsFilename The file to store schedule lower bounds for persistance between app restarts, or null to not persist them.
+     * @param Isolator|null   $isolator
      */
-    public function __construct($directories, FileReader $fileReader, $schedulePersistanceFilename = null, Isolator $isolator = null)
+    public function __construct($directories, FileReader $fileReader = null, $scheduleLowerBoundsFilename = null, Isolator $isolator = null)
     {
         $this->typeCheck = TypeCheck::get(__CLASS__, func_get_args());
 
@@ -28,10 +28,10 @@ class FileProvider implements ProviderInterface
 
         $this->directories = $directories;
         $this->fileReader = $fileReader;
-        $this->schedulePersistanceFilename = $schedulePersistanceFilename;
+        $this->scheduleLowerBoundsFilename = $scheduleLowerBoundsFilename;
+        $this->scheduleLowerBounds = new Map;
         $this->acquiredSchedules = new Set;
         $this->unacquiredSchedules = new Set;
-        $this->scheduleLowerBound = new Map;
         $this->isolator = Isolator::get($isolator);
 
         $this->loadScheduleLowerBounds();
@@ -139,70 +139,13 @@ class FileProvider implements ProviderInterface
         return $schedules->count();
     }
 
-    private function loadScheduleLowerBounds()
-    {
-        TypeCheck::get(__CLASS__)->loadScheduleLowerBounds(func_get_args());
-
-        if (null === $this->schedulePersistanceFilename) {
-            return;
-        }
-
-        if (!$this->isolator->is_file($this->schedulePersistanceFilename)) {
-            return;
-        }
-
-        $result = $this->isolator->file_get_contents($this->schedulePersistanceFilename);
-        if (false !== $result) {
-            $this->scheduleLowerBound->unserialize($result);
-        }
-    }
-
-    private function saveScheduleLowerBounds()
-    {
-        TypeCheck::get(__CLASS__)->saveScheduleLowerBounds(func_get_args());
-
-        if (null === $this->schedulePersistanceFilename) {
-            return;
-        }
-
-        $result = $this->isolator->file_put_contents($this->schedulePersistanceFilename, $this->scheduleLowerBound->serialize());
-        if (false === $result) {
-            // throw?
-        }
-    }
-
-    /**
-     * @param FileSchedule $schedule
-     *
-     * @return DateTime|null
-     */
-    private function scheduleLowerBound(FileSchedule $schedule)
-    {
-        TypeCheck::get(__CLASS__)->scheduleLowerBound(func_get_args());
-
-        return $this->scheduleLowerBound->getWithDefault($schedule->name());
-    }
-
-    /**
-     * @param FileSchedule $schedule
-     * @param DateTime     $lowerBound
-     */
-    private function setScheduleLowerBound(FileSchedule $schedule, DateTime $lowerBound)
-    {
-        TypeCheck::get(__CLASS__)->setScheduleLowerBound(func_get_args());
-
-        $this->scheduleLowerBound[$schedule->name()] = $lowerBound;
-
-        $this->saveScheduleLowerBounds();
-    }
-
     /**
      * @param DateTime     $now      The current time.
      * @param FileSchedule $schedule The schedule to get the next run date time for.
      *
      * @return DateTime The next run date time.
      */
-    private function nextRunDateTime(DateTime $now, FileSchedule $schedule)
+    protected function nextRunDateTime(DateTime $now, FileSchedule $schedule)
     {
         TypeCheck::get(__CLASS__)->nextRunDateTime(func_get_args());
 
@@ -210,18 +153,95 @@ class FileProvider implements ProviderInterface
         if ($scheduleLowerBound) {
             $dateTime = $schedule->cronExpression()->getNextRunDate($scheduleLowerBound->nativeDateTime(), 1);
         } else {
+
+// echo PHP_EOL;
+// echo 'now chrono: ' . $now->isoString() . PHP_EOL;
+// echo 'now native: ' . $now->nativeDateTime()->format(\DateTime::ISO8601) . PHP_EOL;
+
             $dateTime = $schedule->cronExpression()->getNextRunDate($now->nativeDateTime());
+
+// echo 'result native: ' . $dateTime->format(\DateTime::ISO8601) . PHP_EOL;
+// echo 'result chrono: ' . DateTime::fromNativeDateTime($dateTime)->isoString() . PHP_EOL;
+
+// exit;
+
         }
 
+        // CronExpression sets a timezone, so reset it here.
+        $dateTime->setTimezone(new \DateTimeZone('UTC'));
+
         return DateTime::fromNativeDateTime($dateTime);
+    }
+
+    /**
+     * @param FileSchedule $schedule
+     *
+     * @return DateTime|null
+     */
+    protected function scheduleLowerBound(FileSchedule $schedule)
+    {
+        TypeCheck::get(__CLASS__)->scheduleLowerBound(func_get_args());
+
+        return $this->scheduleLowerBounds->getWithDefault($schedule->name());
+    }
+
+    /**
+     * @param FileSchedule $schedule
+     * @param DateTime     $lowerBound
+     */
+    protected function setScheduleLowerBound(FileSchedule $schedule, DateTime $lowerBound)
+    {
+        TypeCheck::get(__CLASS__)->setScheduleLowerBound(func_get_args());
+
+        $this->scheduleLowerBounds[$schedule->name()] = $lowerBound;
+
+        $this->saveScheduleLowerBounds();
+    }
+
+    protected function loadScheduleLowerBounds()
+    {
+        TypeCheck::get(__CLASS__)->loadScheduleLowerBounds(func_get_args());
+
+        if (null === $this->scheduleLowerBoundsFilename) {
+            return;
+        }
+
+        if (!$this->isolator->is_file($this->scheduleLowerBoundsFilename)) {
+            return;
+        }
+
+        $data = $this->isolator->unserialize(
+            $this->isolator->file_get_contents($this->scheduleLowerBoundsFilename)
+        );
+        foreach ($data as $name => $isoDateTime) {
+            $this->scheduleLowerBounds[$name] = DateTime::fromIsoString($isoDateTime);
+        }
+    }
+
+    protected function saveScheduleLowerBounds()
+    {
+        TypeCheck::get(__CLASS__)->saveScheduleLowerBounds(func_get_args());
+
+        if (null === $this->scheduleLowerBoundsFilename) {
+            return;
+        }
+
+        $data = array();
+        foreach ($this->scheduleLowerBounds as $name => $dateTime) {
+            $data[$name] = $dateTime->isoString();
+        }
+        $this->isolator->file_put_contents(
+            $this->scheduleLowerBoundsFilename,
+            $this->isolator->serialize($data)
+        );
     }
 
     private $typeCheck;
     private $directories;
     private $fileReader;
-    private $schedulePersistanceFilename;
+    private $scheduleLowerBoundsFilename;
+    private $scheduleLowerBounds;
     private $acquiredSchedules;
     private $unacquiredSchedules;
-    private $scheduleLowerBound;
     private $isolator;
 }
