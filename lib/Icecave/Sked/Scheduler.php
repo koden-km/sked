@@ -9,6 +9,7 @@ use Icecave\Isolator\Isolator;
 use Icecave\Sked\Dispatcher\DispatcherInterface;
 use Icecave\Sked\Provider\ProviderInterface;
 use Icecave\Sked\Schedule\Event;
+use Icecave\Sked\TypeCheck\TypeCheck;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -31,6 +32,8 @@ class Scheduler implements LoggerAwareInterface
         ClockInterface $clock = null,
         Isolator $isolator = null
     ) {
+        $this->typeCheck = TypeCheck::get(__CLASS__, func_get_args());
+
         if (null === $clock) {
             $clock = new SystemClock;
         }
@@ -53,6 +56,8 @@ class Scheduler implements LoggerAwareInterface
      */
     public function reloadInterval()
     {
+        TypeCheck::get(__CLASS__)->reloadInterval(func_get_args());
+
         return $this->reloadInterval;
     }
 
@@ -61,6 +66,8 @@ class Scheduler implements LoggerAwareInterface
      */
     public function setReloadInterval($seconds)
     {
+        TypeCheck::get(__CLASS__)->setReloadInterval(func_get_args());
+
         $this->reloadInterval = $seconds;
     }
 
@@ -69,6 +76,8 @@ class Scheduler implements LoggerAwareInterface
      */
     public function delayWarningThreshold()
     {
+        TypeCheck::get(__CLASS__)->delayWarningThreshold(func_get_args());
+
         return $this->delayWarningThreshold;
     }
 
@@ -77,11 +86,18 @@ class Scheduler implements LoggerAwareInterface
      */
     public function setDelayWarningThreshold($seconds)
     {
+        TypeCheck::get(__CLASS__)->setDelayWarningThreshold(func_get_args());
+
         $this->delayWarningThreshold = $seconds;
     }
 
+    /**
+     * @return boolean
+     */
     public function run()
     {
+        TypeCheck::get(__CLASS__)->run(func_get_args());
+
         try {
             // Prepare for execution ...
             $this->setUp();
@@ -114,6 +130,8 @@ class Scheduler implements LoggerAwareInterface
 
     protected function setUp()
     {
+        TypeCheck::get(__CLASS__)->setUp(func_get_args());
+
         $self = $this;
 
         $handler = function ($signal) use ($self) {
@@ -138,6 +156,8 @@ class Scheduler implements LoggerAwareInterface
 
     protected function tearDown()
     {
+        TypeCheck::get(__CLASS__)->tearDown(func_get_args());
+
         $this->isRunning = false;
         $this->doReload = false;
         $this->isolator->pcntl_signal(SIGTERM, SIG_DFL);
@@ -148,6 +168,8 @@ class Scheduler implements LoggerAwareInterface
 
     protected function mainLoop()
     {
+        TypeCheck::get(__CLASS__)->mainLoop(func_get_args());
+
         while ($this->isRunning) {
 
             $this->isolator->pcntl_signal_dispatch();
@@ -176,6 +198,8 @@ class Scheduler implements LoggerAwareInterface
 
     protected function reload()
     {
+        TypeCheck::get(__CLASS__)->reload(func_get_args());
+
         $now = $this->clock->localDateTime();
 
         try {
@@ -197,13 +221,23 @@ class Scheduler implements LoggerAwareInterface
         $this->lastReload = $now;
     }
 
+    /**
+     * @return DateTime
+     */
     protected function nextReloadDateTime()
     {
+        TypeCheck::get(__CLASS__)->nextReloadDateTime(func_get_args());
+
         return $this->lastReload->add($this->reloadInterval);
     }
 
+    /**
+     * @return Event|null
+     */
     protected function acquireEvent()
     {
+        TypeCheck::get(__CLASS__)->acquireEvent(func_get_args());
+
         if (null === $this->nextEvent) {
             $this->nextEvent = $this->provider->acquire(
                 $this->clock->localDateTime(),
@@ -227,6 +261,8 @@ class Scheduler implements LoggerAwareInterface
 
     protected function dispatchEvent()
     {
+        TypeCheck::get(__CLASS__)->dispatchEvent(func_get_args());
+
         $now = $this->clock->localDateTime();
 
         $jobId = $this->dispatcher->dispatch($now, $this->nextEvent);
@@ -264,6 +300,8 @@ class Scheduler implements LoggerAwareInterface
 
     protected function rollbackEvent()
     {
+        TypeCheck::get(__CLASS__)->rollbackEvent(func_get_args());
+
         if ($this->nextEvent) {
 
             $this->provider->rollback(
@@ -284,8 +322,13 @@ class Scheduler implements LoggerAwareInterface
         }
     }
 
+    /**
+     * @param DateTime $lowerBounds
+     */
     protected function commitEvent(DateTime $lowerBounds)
     {
+        TypeCheck::get(__CLASS__)->commitEvent(func_get_args());
+
         if ($this->nextEvent) {
 
             $this->provider->commit(
@@ -308,8 +351,15 @@ class Scheduler implements LoggerAwareInterface
         }
     }
 
+    /**
+     * @param DateTime $dateTime
+     *
+     * @return boolean
+     */
     protected function waitUntil(DateTime $dateTime)
     {
+        TypeCheck::get(__CLASS__)->waitUntil(func_get_args());
+
         $seconds = $dateTime->differenceAsSeconds(
             $this->clock->localDateTime()
         );
@@ -331,6 +381,7 @@ class Scheduler implements LoggerAwareInterface
         return false;
     }
 
+    private $typeCheck;
     private $provider;
     private $dispatcher;
     private $isRunning;

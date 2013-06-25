@@ -2,6 +2,7 @@
 namespace Icecave\Sked\Provider\Exception;
 
 use Exception;
+use Icecave\Sked\TypeCheck\TypeCheck;
 use RuntimeException;
 
 class ReloadException extends RuntimeException
@@ -12,6 +13,8 @@ class ReloadException extends RuntimeException
      */
     public function __construct($reason, Exception $exception = null)
     {
+        TypeCheck::get(__CLASS__, func_get_args());
+
         parent::__construct($reason, 0, $exception);
     }
 }

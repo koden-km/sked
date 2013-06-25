@@ -5,11 +5,14 @@ use Icecave\Chrono\DateTime;
 use Icecave\Collections\Map;
 use Icecave\Collections\Set;
 use Icecave\Sked\Schedule\Event;
+use Icecave\Sked\TypeCheck\TypeCheck;
 
 class AggregateProvider implements ProviderInterface
 {
-    public function  __construct()
+    public function __construct()
     {
+        $this->typeCheck = TypeCheck::get(__CLASS__, func_get_args());
+
         $this->providers = new Set;
         $this->eventMap = new Map;
     }
@@ -19,6 +22,8 @@ class AggregateProvider implements ProviderInterface
      */
     public function add(ProviderInterface $provider)
     {
+        TypeCheck::get(__CLASS__)->add(func_get_args());
+
         $this->providers->add($provider);
     }
 
@@ -27,6 +32,8 @@ class AggregateProvider implements ProviderInterface
      */
     public function remove(ProviderInterface $provider)
     {
+        TypeCheck::get(__CLASS__)->remove(func_get_args());
+
         $this->providers->remove($provider);
     }
 
@@ -35,6 +42,8 @@ class AggregateProvider implements ProviderInterface
      */
     public function providers()
     {
+        TypeCheck::get(__CLASS__)->providers(func_get_args());
+
         return $this->providers;
     }
 
@@ -51,6 +60,8 @@ class AggregateProvider implements ProviderInterface
      */
     public function acquire(DateTime $now, DateTime $upperBound)
     {
+        TypeCheck::get(__CLASS__)->acquire(func_get_args());
+
         $nextEvent = null;
         $nextProvider = null;
 
@@ -75,9 +86,13 @@ class AggregateProvider implements ProviderInterface
      *
      * @param DateTime $now   The current time.
      * @param Event    $event The previously acquired event.
+     *
+     * @throws Exception\NotAcquiredException
      */
     public function rollback(DateTime $now, Event $event)
     {
+        TypeCheck::get(__CLASS__)->rollback(func_get_args());
+
         if ($this->eventMap->tryGet($event, $provider)) {
             $provider->rollback($now, $event);
             $this->eventMap->remove($event);
@@ -94,9 +109,13 @@ class AggregateProvider implements ProviderInterface
      * @param DateTime $now        The current time.
      * @param Event    $event      The previously acquired event.
      * @param DateTime $lowerBound Threshold of future event eligibility (event-date > upper-bound).
+     *
+     * @throws Exception\NotAcquiredException
      */
     public function commit(DateTime $now, Event $event, DateTime $lowerBound)
     {
+        TypeCheck::get(__CLASS__)->commit(func_get_args());
+
         if ($this->eventMap->tryGet($event, $provider)) {
             $provider->commit($now, $event, $lowerBound);
             $this->eventMap->remove($event);
@@ -114,6 +133,8 @@ class AggregateProvider implements ProviderInterface
      */
     public function reload(DateTime $now)
     {
+        TypeCheck::get(__CLASS__)->reload(func_get_args());
+
         $count = 0;
 
         foreach ($this->providers as $provider) {
@@ -123,6 +144,7 @@ class AggregateProvider implements ProviderInterface
         return $count;
     }
 
+    private $typeCheck;
     private $providers;
     private $eventMap;
 }

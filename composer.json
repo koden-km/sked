@@ -14,10 +14,13 @@
         "php": ">=5.4",
         "ext-pcntl": "*",
         "eloquent/asplode": "~1",
+        "eloquent/schemer": "~0.2",
         "icecave/skew-entities": "dev-develop@dev",
         "icecave/chrono": "~0.2",
         "icecave/collections": "~0.6",
+        "icecave/isolator": "~2",
         "monolog/monolog": "~1",
+        "mtdowling/cron-expression": "~1",
         "psr/log": "~1"
     },
     "require-dev": {
