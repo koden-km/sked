@@ -154,6 +154,10 @@ class FileProvider implements ProviderInterface
             $dateTime = $schedule->cronExpression()->getNextRunDate($scheduleLowerBound->nativeDateTime(), 1);
         } else {
 
+
+// The CronExpression parser being used is altering the datetimes with timezones.
+// Swap it out for the new Icecave\Agenda cron like parser.
+
 // echo PHP_EOL;
 // echo 'now chrono: ' . $now->isoString() . PHP_EOL;
 // echo 'now native: ' . $now->nativeDateTime()->format(\DateTime::ISO8601) . PHP_EOL;
