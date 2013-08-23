@@ -151,28 +151,10 @@ class FileProvider implements ProviderInterface
 
         $scheduleLowerBound = $this->scheduleLowerBound($schedule);
         if ($scheduleLowerBound) {
-            $dateTime = $schedule->cronExpression()->getNextRunDate($scheduleLowerBound->nativeDateTime(), 1);
+            $dateTime = $schedule->agendaSchedule()->firstEventAfter($scheduleLowerBound);
         } else {
-
-
-// The CronExpression parser being used is altering the datetimes with timezones.
-// Swap it out for the new Icecave\Agenda cron like parser.
-
-// echo PHP_EOL;
-// echo 'now chrono: ' . $now->isoString() . PHP_EOL;
-// echo 'now native: ' . $now->nativeDateTime()->format(\DateTime::ISO8601) . PHP_EOL;
-
-            $dateTime = $schedule->cronExpression()->getNextRunDate($now->nativeDateTime());
-
-// echo 'result native: ' . $dateTime->format(\DateTime::ISO8601) . PHP_EOL;
-// echo 'result chrono: ' . DateTime::fromNativeDateTime($dateTime)->isoString() . PHP_EOL;
-
-// exit;
-
+            $dateTime = $schedule->agendaSchedule()->firstEventFrom($now);
         }
-
-        // CronExpression sets a timezone, so reset it here.
-        $dateTime->setTimezone(new \DateTimeZone('UTC'));
 
         return DateTime::fromNativeDateTime($dateTime);
     }

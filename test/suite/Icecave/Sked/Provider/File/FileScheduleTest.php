@@ -1,7 +1,7 @@
 <?php
 namespace Icecave\Sked\Provider\File;
 
-use Cron\CronExpression;
+use Icecave\Agenda\Schedule\DailySchedule;
 use Icecave\Skew\Entities\TaskDetails;
 use PHPUnit_Framework_TestCase;
 
@@ -11,13 +11,13 @@ class FileScheduleTest extends PHPUnit_Framework_TestCase
     {
         $this->name = 'email-reports';
         $this->taskDetails = new TaskDetails('foo.send-email-reports');
-        $this->cronExpression = CronExpression::factory('@daily');
+        $this->agendaSchedule = new DailySchedule;
         $this->skippable = true;
 
         $this->fileSchedule = new FileSchedule(
             $this->name,
             $this->taskDetails,
-            $this->cronExpression,
+            $this->agendaSchedule,
             $this->skippable
         );
     }
@@ -26,7 +26,7 @@ class FileScheduleTest extends PHPUnit_Framework_TestCase
     {
         $this->assertSame($this->name, $this->fileSchedule->name());
         $this->assertSame($this->taskDetails, $this->fileSchedule->taskDetails());
-        $this->assertSame($this->cronExpression, $this->fileSchedule->cronExpression());
+        $this->assertSame($this->agendaSchedule, $this->fileSchedule->agendaSchedule());
         $this->assertTrue($this->fileSchedule->isSkippable());
     }
 }

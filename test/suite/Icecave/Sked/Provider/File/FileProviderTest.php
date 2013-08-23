@@ -1,8 +1,9 @@
 <?php
 namespace Icecave\Sked\Provider\File;
 
-use Cron\CronExpression;
 use Eloquent\Liberator\Liberator;
+use Icecave\Agenda\Parser\CronParser;
+use Icecave\Agenda\Schedule\DailySchedule;
 use Icecave\Chrono\DateTime;
 use Icecave\Collections\Map;
 use Icecave\Collections\Set;
@@ -22,7 +23,7 @@ class FileProviderTest extends PHPUnit_Framework_TestCase
         $this->fileSchedule = new FileSchedule(
             'foo-name',
             new TaskDetails('foo.some-task'),
-            CronExpression::factory('@daily'),
+            new DailySchedule,
             true
         );
 
@@ -102,16 +103,20 @@ class FileProviderTest extends PHPUnit_Framework_TestCase
         Phake::verify($this->provider)->scheduleLowerBound($this->fileSchedule);
     }
 
-    // public function testNextRunDateTimeWithExistingLowerBound()
-    // {
-    //     $dateTime = null; // DateTime::from*() or just use a pre-build one?
+    public function testNextRunDateTimeWithExistingLowerBound()
+    {
+        $dateTime = new DateTime(
+            $this->now->year(),
+            $this->now->month(),
+            $this->now->day() + 1
+        );
 
-    //     $this->liberatedProvider->setScheduleLowerBound($this->fileSchedule, $this->lowerBound);
+        $this->liberatedProvider->setScheduleLowerBound($this->fileSchedule, $this->lowerBound);
 
-    //     $this->assertEquals($dateTime, $this->liberatedProvider->nextRunDateTime($this->now, $this->fileSchedule));
+        $this->assertEquals($dateTime, $this->liberatedProvider->nextRunDateTime($this->now, $this->fileSchedule));
 
-    //     Phake::verify($this->provider)->scheduleLowerBound($this->fileSchedule);
-    // }
+        Phake::verify($this->provider)->scheduleLowerBound($this->fileSchedule);
+    }
 
     public function testScheduleLowerBound()
     {

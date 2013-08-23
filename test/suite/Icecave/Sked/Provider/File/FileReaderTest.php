@@ -1,13 +1,16 @@
 <?php
 namespace Icecave\Sked\Provider\File;
 
-use Cron\CronExpression;
 use Eloquent\Liberator\Liberator;
 use Eloquent\Schemer\Constraint\Reader\SchemaReader;
 use Eloquent\Schemer\Reader\SwitchingScopeResolvingReader;
 use Eloquent\Schemer\Validation\BoundConstraintValidator;
 use Eloquent\Schemer\Validation\ConstraintValidator;
 use Eloquent\Schemer\Validation\DefaultingConstraintValidator;
+use Icecave\Agenda\Parser\CronParser;
+use Icecave\Agenda\Schedule\HourlySchedule;
+use Icecave\Agenda\Schedule\MonthlySchedule;
+use Icecave\Agenda\Schedule\WeeklySchedule;
 use Icecave\Collections\Map;
 use Icecave\Isolator\Isolator;
 use Icecave\Skew\Entities\TaskDetails;
@@ -29,11 +32,14 @@ class FileReaderTest extends PHPUnit_Framework_TestCase
             $this->schemaReader->readPath(__DIR__ . '/../../../../../../res/schedule-config.schema.json')
         );
 
+        $this->cronParser = new CronParser;
+
         $this->fileReader = Phake::partialMock(
             __NAMESPACE__ . '\FileReader',
             $this->reader,
             $this->constraintValidator,
             $this->schemaReader,
+            $this->cronParser,
             $this->isolator
         );
 
@@ -45,6 +51,7 @@ class FileReaderTest extends PHPUnit_Framework_TestCase
         $this->assertSame($this->reader, $this->liberatedFileReader->reader);
         $this->assertSame($this->constraintValidator, $this->liberatedFileReader->constraintValidator);
         $this->assertSame($this->schemaReader, $this->liberatedFileReader->schemaReader);
+        $this->assertSame($this->cronParser, $this->liberatedFileReader->cronParser);
         $this->assertSame($this->isolator, $this->liberatedFileReader->isolator);
     }
 
@@ -56,6 +63,7 @@ class FileReaderTest extends PHPUnit_Framework_TestCase
         $this->assertInstanceOf('Eloquent\Schemer\Reader\SwitchingScopeResolvingReader', $liberatedFileReader->reader);
         $this->assertInstanceOf('Eloquent\Schemer\Validation\BoundConstraintValidator', $liberatedFileReader->constraintValidator);
         $this->assertInstanceOf('Eloquent\Schemer\Constraint\Reader\SchemaReader', $liberatedFileReader->schemaReader);
+        $this->assertInstanceOf('Icecave\Agenda\Parser\CronParser', $liberatedFileReader->cronParser);
         $this->assertInstanceOf('Icecave\Isolator\Isolator', $liberatedFileReader->isolator);
     }
 
@@ -68,7 +76,7 @@ class FileReaderTest extends PHPUnit_Framework_TestCase
         $schedule1 = new FileSchedule(
             'email-reports',
             $taskDetails1,
-            CronExpression::factory('@hourly'),
+            new HourlySchedule,
             false
         );
 
@@ -79,7 +87,7 @@ class FileReaderTest extends PHPUnit_Framework_TestCase
         $schedule2 = new FileSchedule(
             'leaderboards',
             $taskDetails2,
-            CronExpression::factory('*/5 * * * *'),
+            new WeeklySchedule,
             true
         );
 
@@ -90,7 +98,7 @@ class FileReaderTest extends PHPUnit_Framework_TestCase
         $schedule3 = new FileSchedule(
             'sub-dir-test',
             $taskDetails3,
-            CronExpression::factory('0 0 1 * *'),
+            new MonthlySchedule,
             false
         );
 

@@ -1,7 +1,6 @@
 <?php
 namespace Icecave\Sked\Provider\File;
 
-use Cron\CronExpression;
 use Eloquent\Schemer\Constraint\Reader\SchemaReader;
 use Eloquent\Schemer\Constraint\Reader\SchemaReaderInterface;
 use Eloquent\Schemer\Reader\ReaderInterface;
@@ -9,11 +8,13 @@ use Eloquent\Schemer\Reader\SwitchingScopeResolvingReader;
 use Eloquent\Schemer\Validation\BoundConstraintValidator;
 use Eloquent\Schemer\Validation\DefaultingConstraintValidator;
 use Eloquent\Schemer\Validation\DefaultingConstraintValidatorInterface;
+use Icecave\Agenda\Parser\CronParser;
 use Icecave\Collections\Map;
 use Icecave\Isolator\Isolator;
 use Icecave\Skew\Entities\TaskDetails;
 use Icecave\Sked\Provider\Exception\ReloadException;
 use Icecave\Sked\TypeCheck\TypeCheck;
+use InvalidArgumentException;
 use Zend\Uri\File As FileUri;
 
 class FileReader
@@ -22,6 +23,7 @@ class FileReader
      * @param ReaderInterface|null          $reader
      * @param BoundConstraintValidator|null $constraintValidator
      * @param SchemaReaderInterface|null    $schemaReader
+     * @param CronParser|null               $cronParser
      * @param Isolator|null                 $isolator
      */
     public function __construct(
@@ -47,9 +49,13 @@ class FileReader
             );
         }
 
+        if (null === $cronParser) {
+            $cronParser = new CronParser;
+        }
+
         $this->reader = $reader;
         $this->constraintValidator = $constraintValidator;
-        $this->schemaReader = $schemaReader;
+        $this->cronParser = $cronParser;
         $this->isolator = Isolator::get($isolator);
     }
 
@@ -57,6 +63,7 @@ class FileReader
      * @param mixed<string> $directories
      *
      * @return Map<string, FileSchedule>
+     * @throws ReloadException
      */
     public function readDirectories($directories)
     {
@@ -94,6 +101,7 @@ class FileReader
      * @param string $filename
      *
      * @return Map<string, FileSchedule>
+     * @throws ReloadException
      */
     public function readFile($filename)
     {
@@ -125,7 +133,7 @@ class FileReader
                 $schedule = new FileSchedule(
                     $scheduleName,
                     $taskDetails,
-                    CronExpression::factory($details->schedule->value()),
+                    $cronParser->parse($details->schedule->value()),
                     $details->skippable->value()
                 );
 
@@ -133,6 +141,8 @@ class FileReader
             }
         } catch (\Eloquent\Schemer\Value\Exception\UndefinedPropertyException $e) {
             throw new ReloadException('Schedule file is invalid.');
+        } catch (InvalidArgumentException $e) {
+            throw new ReloadException($e->getMessage());
         }
 
         return $schedules;
@@ -142,5 +152,6 @@ class FileReader
     private $reader;
     private $constraintValidator;
     private $schemaReader;
+    private $cronParser;
     private $isolator;
 }

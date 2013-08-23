@@ -5,7 +5,7 @@ email-reports:
         - @sked.time
  
 leaderboards:
-    schedule: "*/5 * * * *"
+    schedule: "0 0 * * 0"
     skippable: true
     task: site.update-leaderboards
     tags:

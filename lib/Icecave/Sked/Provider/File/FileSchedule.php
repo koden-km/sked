@@ -1,7 +1,7 @@
 <?php
 namespace Icecave\Sked\Provider\File;
 
-use Cron\CronExpression;
+use Icecave\Agenda\ScheduleInterface as AgendaScheduleInterface;
 use Icecave\Sked\Schedule\Schedule;
 use Icecave\Sked\TypeCheck\TypeCheck;
 use Icecave\Skew\Entities\TaskDetails;
@@ -10,19 +10,19 @@ use Icecave\Skew\Entities\TaskDetailsInterface;
 class FileSchedule extends Schedule
 {
     /**
-     * @param string               $name
-     * @param TaskDetailsInterface $taskDetails
-     * @param CronExpression       $cronExpression
-     * @param boolean              $skippable
+     * @param string                  $name
+     * @param TaskDetailsInterface    $taskDetails
+     * @param AgendaScheduleInterface $agendaSchedule
+     * @param boolean                 $skippable
      */
-    public function __construct($name, TaskDetailsInterface $taskDetails, CronExpression $cronExpression, $skippable)
+    public function __construct($name, TaskDetailsInterface $taskDetails, AgendaScheduleInterface $agendaSchedule, $skippable)
     {
         $this->typeCheck = TypeCheck::get(__CLASS__, func_get_args());
 
         parent::__construct($name, $skippable);
 
         $this->taskDetails = $taskDetails;
-        $this->cronExpression = $cronExpression;
+        $this->agendaSchedule = $agendaSchedule;
     }
 
     /**
@@ -36,16 +36,16 @@ class FileSchedule extends Schedule
     }
 
     /**
-     * @return CronExpression
+     * @return AgendaScheduleInterface
      */
-    public function cronExpression()
+    public function agendaSchedule()
     {
-        TypeCheck::get(__CLASS__)->cronExpression(func_get_args());
+        TypeCheck::get(__CLASS__)->agendaSchedule(func_get_args());
 
-        return $this->cronExpression;
+        return $this->agendaSchedule;
     }
 
     private $typeCheck;
     private $taskDetails;
-    private $cronExpression;
+    private $agendaSchedule;
 }

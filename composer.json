@@ -15,10 +15,11 @@
         "ext-pcntl": "*",
         "eloquent/asplode": "~1",
         "eloquent/schemer": "~0.2",
-        "icecave/skew-entities": "dev-develop@dev",
+        "icecave/agenda": "dev-develop@dev",
         "icecave/chrono": "~0.2",
         "icecave/collections": "~0.6",
         "icecave/isolator": "~2",
+        "icecave/skew-entities": "dev-develop@dev",
         "monolog/monolog": "~1",
         "mtdowling/cron-expression": "~1",
         "psr/log": "~1"
@@ -34,6 +35,14 @@
             "Icecave\\Sked\\TypeCheck": "lib-typhoon"
         }
     },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/IcecaveLabs/agenda.git"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "extra": {
         "typhoon": {
             "output-path": "lib-typhoon",
