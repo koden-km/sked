@@ -16,7 +16,7 @@
         "eloquent/asplode": "~1",
         "eloquent/schemer": "~0.2",
         "icecave/agenda": "dev-develop@dev",
-        "icecave/chrono": "~0.2",
+        "icecave/chrono": "dev-develop@dev",
         "icecave/collections": "~0.6",
         "icecave/isolator": "~2",
         "icecave/skew-entities": "dev-develop@dev",

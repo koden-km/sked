@@ -1,7 +1,7 @@
 <?php
 namespace Icecave\Sked\Provider\File;
 
-use Icecave\Agenda\ScheduleInterface as AgendaScheduleInterface;
+use Icecave\Agenda\Schedule\ScheduleInterface as AgendaScheduleInterface;
 use Icecave\Sked\Schedule\Schedule;
 use Icecave\Sked\TypeCheck\TypeCheck;
 use Icecave\Skew\Entities\TaskDetails;

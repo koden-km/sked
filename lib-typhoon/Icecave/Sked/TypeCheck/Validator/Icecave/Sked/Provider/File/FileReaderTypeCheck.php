@@ -6,8 +6,8 @@ class FileReaderTypeCheck extends \Icecave\Sked\TypeCheck\AbstractValidator
     public function validateConstruct(array $arguments)
     {
         $argumentCount = \count($arguments);
-        if ($argumentCount > 4) {
-            throw new \Icecave\Sked\TypeCheck\Exception\UnexpectedArgumentException(4, $arguments[4]);
+        if ($argumentCount > 5) {
+            throw new \Icecave\Sked\TypeCheck\Exception\UnexpectedArgumentException(5, $arguments[5]);
         }
     }
 

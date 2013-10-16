@@ -14,7 +14,7 @@ class FileScheduleTypeCheck extends \Icecave\Sked\TypeCheck\AbstractValidator
                 throw new \Icecave\Sked\TypeCheck\Exception\MissingArgumentException('taskDetails', 1, 'Icecave\\Skew\\Entities\\TaskDetailsInterface');
             }
             if ($argumentCount < 3) {
-                throw new \Icecave\Sked\TypeCheck\Exception\MissingArgumentException('cronExpression', 2, 'Cron\\CronExpression');
+                throw new \Icecave\Sked\TypeCheck\Exception\MissingArgumentException('agendaSchedule', 2, 'Icecave\\Agenda\\Schedule\\ScheduleInterface');
             }
             throw new \Icecave\Sked\TypeCheck\Exception\MissingArgumentException('skippable', 3, 'boolean');
         } elseif ($argumentCount > 4) {
@@ -47,7 +47,7 @@ class FileScheduleTypeCheck extends \Icecave\Sked\TypeCheck\AbstractValidator
         }
     }
 
-    public function cronExpression(array $arguments)
+    public function agendaSchedule(array $arguments)
     {
         if (\count($arguments) > 0) {
             throw new \Icecave\Sked\TypeCheck\Exception\UnexpectedArgumentException(0, $arguments[0]);

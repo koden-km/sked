@@ -30,6 +30,7 @@ class FileReader
         ReaderInterface $reader = null,
         BoundConstraintValidator $constraintValidator = null,
         SchemaReaderInterface $schemaReader = null,
+        CronParser $cronParser = null,
         Isolator $isolator = null
     ) {
         $this->typeCheck = TypeCheck::get(__CLASS__, func_get_args());
