@@ -17,7 +17,7 @@
         "eloquent/schemer": "~0.2",
         "icecave/agenda": "dev-develop@dev",
         "icecave/chrono": "dev-develop@dev",
-        "icecave/collections": "~0.6",
+        "icecave/collections": "~1@dev",
         "icecave/isolator": "~2",
         "icecave/skew-entities": "dev-develop@dev",
         "monolog/monolog": "~1",
@@ -27,7 +27,7 @@
     "require-dev": {
         "eloquent/liberator": "~1",
         "eloquent/typhoon": "~0.9",
-        "icecave/archer": "~0.3"
+        "icecave/archer": "~1"
     },
     "autoload": {
         "psr-0": {
