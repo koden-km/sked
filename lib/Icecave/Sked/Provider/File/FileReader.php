@@ -45,7 +45,6 @@ class FileReader
 
         if (null === $constraintValidator) {
             $constraintValidator = new BoundConstraintValidator(
-                new DefaultingConstraintValidator,
                 $schemaReader->readPath(__DIR__ . '/../../../../../res/schedule-config.schema.json')
             );
         }
@@ -84,11 +83,11 @@ class FileReader
 
                 $path = $dirname . '/' . $entry;
                 if ($this->isolator->is_dir($path)) {
-                    $schedules = $schedules->combine(
+                    $schedules = $schedules->merge(
                         $this->readDirectories(array($path))
                     );
                 } else {
-                    $schedules = $schedules->combine(
+                    $schedules = $schedules->merge(
                         $this->readFile($path)
                     );
                 }
@@ -109,16 +108,7 @@ class FileReader
         TypeCheck::get(__CLASS__)->readFile(func_get_args());
 
         $value = $this->reader->readPath($filename);
-
-        if ($this->constraintValidator->validator() instanceof DefaultingConstraintValidatorInterface) {
-            $result = $this->constraintValidator->validator()->validateAndApplyDefaults(
-                $this->constraintValidator->constraint(),
-                $value
-            );
-        } else {
-            $result = $this->constraintValidator->validate($value);
-        }
-
+        $result = $this->constraintValidator->validate($value);
         if (!$result->isValid()) {
             throw new ReloadException('Schedule file is invalid.');
         }
@@ -134,7 +124,7 @@ class FileReader
                 $schedule = new FileSchedule(
                     $scheduleName,
                     $taskDetails,
-                    $cronParser->parse($details->schedule->value()),
+                    $this->cronParser->parse($details->schedule->value()),
                     $details->skippable->value()
                 );
 

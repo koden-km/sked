@@ -151,12 +151,10 @@ class FileProvider implements ProviderInterface
 
         $scheduleLowerBound = $this->scheduleLowerBound($schedule);
         if ($scheduleLowerBound) {
-            $dateTime = $schedule->agendaSchedule()->firstEventAfter($scheduleLowerBound);
-        } else {
-            $dateTime = $schedule->agendaSchedule()->firstEventFrom($now);
+            return $schedule->agendaSchedule()->firstEventAfter($scheduleLowerBound);
         }
 
-        return DateTime::fromNativeDateTime($dateTime);
+        return $schedule->agendaSchedule()->firstEventFrom($now);
     }
 
     /**

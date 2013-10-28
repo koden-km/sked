@@ -15,8 +15,12 @@ class FileSchedule extends Schedule
      * @param AgendaScheduleInterface $agendaSchedule
      * @param boolean                 $skippable
      */
-    public function __construct($name, TaskDetailsInterface $taskDetails, AgendaScheduleInterface $agendaSchedule, $skippable)
-    {
+    public function __construct(
+        $name,
+        TaskDetailsInterface $taskDetails,
+        AgendaScheduleInterface $agendaSchedule,
+        $skippable
+    ) {
         $this->typeCheck = TypeCheck::get(__CLASS__, func_get_args());
 
         parent::__construct($name, $skippable);

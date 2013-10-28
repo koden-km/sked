@@ -28,7 +28,6 @@ class FileReaderTest extends PHPUnit_Framework_TestCase
         $this->schemaReader = new SchemaReader;
 
         $this->constraintValidator = new BoundConstraintValidator(
-            new DefaultingConstraintValidator,
             $this->schemaReader->readPath(__DIR__ . '/../../../../../../res/schedule-config.schema.json')
         );
 
@@ -131,14 +130,15 @@ class FileReaderTest extends PHPUnit_Framework_TestCase
     public function testReadFileWithNonDefaultingConstraintValidatorInterface()
     {
         $constraintValidator = new BoundConstraintValidator(
-            new ConstraintValidator,
-            $this->schemaReader->readPath(__DIR__ . '/../../../../../../res/schedule-config.schema.json')
+            $this->schemaReader->readPath(__DIR__ . '/../../../../../../res/schedule-config.schema.json'),
+            new ConstraintValidator
         );
 
         $fileReader = new FileReader(
             $this->reader,
             $constraintValidator,
             $this->schemaReader,
+            $this->cronParser,
             $this->isolator
         );
 

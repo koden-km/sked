@@ -15,7 +15,7 @@ class BasicProvider implements ProviderInterface
      * @param TaskDetailsInterface $taskDetails
      * @param Duration             $interval
      */
-    public function  __construct(ScheduleInterface $schedule, TaskDetailsInterface $taskDetails, Duration $interval)
+    public function __construct(ScheduleInterface $schedule, TaskDetailsInterface $taskDetails, Duration $interval)
     {
         $this->typeCheck = TypeCheck::get(__CLASS__, func_get_args());
 

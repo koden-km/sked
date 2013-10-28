@@ -14,7 +14,7 @@
         "php": ">=5.4",
         "ext-pcntl": "*",
         "eloquent/asplode": "~1",
-        "eloquent/schemer": "~0.2",
+        "eloquent/schemer": "~0.3",
         "icecave/agenda": "dev-develop@dev",
         "icecave/chrono": "dev-develop@dev",
         "icecave/collections": "~1@dev",

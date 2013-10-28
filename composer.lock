@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "e4729849ab828c96e8df804571a4006b",
+    "hash": "9f5957f57642d098a6592fc4ade4608c",
     "packages": [
         {
             "name": "eloquent/asplode",
