@@ -31,6 +31,16 @@ class AggregateProviderTest extends PHPUnit_Framework_TestCase
 
         $this->provider->add($this->provider1);
         $this->provider->add($this->provider2);
+
+        // Swap the names used for the two mocked providers to prevent set ordering issues from breaking tests.
+        foreach ($this->provider->providers() as $provider) {
+            if ($provider === $this->provider2) {
+                $temp = $this->provider1;
+                $this->provider1 = $this->provider2;
+                $this->provider2 = $temp;
+            }
+            break;
+        }
     }
 
     public function testAdd()
@@ -64,6 +74,10 @@ class AggregateProviderTest extends PHPUnit_Framework_TestCase
         Phake::when($this->provider1)
             ->acquire(Phake::anyParameters())
             ->thenReturn($this->event1);
+
+        Phake::when($this->provider2)
+            ->acquire(Phake::anyParameters())
+            ->thenReturn(null);
 
         $result = $this->provider->acquire($this->now, $this->upperBound);
 
